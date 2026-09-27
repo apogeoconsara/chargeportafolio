@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Automation & Digital Transformation Assistant · Sarahí Cruz Salazar</title>
+<meta name="description" content="One assistant, seven ways to build automation and AI-powered digital transformation for logistics operations — chatbots, Workday/ERP integrations, document processing and KPI dashboards, live, powered by Claude.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/console.css">
+</head>
+<body>
+
+<header class="nav">
+  <div class="container nav-inner">
+    <span class="logo">Sarahí Cruz Salazar</span>
+    <nav>
+      <a href="#assistant" data-i18n="nav.assistant">Assistant</a>
+      <a href="#how" data-i18n="nav.how">How it works</a>
+      <a href="#capabilities" data-i18n="nav.capabilities">Capabilities</a>
+      <a href="#contact" data-i18n="nav.contact">Contact</a>
+      <span class="lang-toggle">
+        <button id="lang-en" class="lang-btn active" type="button">EN</button>
+        <span class="lang-sep">|</span>
+        <button id="lang-es" class="lang-btn" type="button">ES</button>
+      </span>
+    </nav>
+  </div>
+</header>
+
+<!-- ============ 1. HERO + ASSISTANT ============ -->
+<section id="assistant" class="console-hero">
+  <div class="container">
+    <p class="role-line" data-i18n="hero.role">Digital Transformation & Automation Specialist — Charger Logistics</p>
+    <h1 data-i18n="hero.h1">One assistant. Seven ways to automate a logistics operation with AI.</h1>
+    <p class="lead" data-i18n="hero.lead">Pick a goal, describe your situation, and watch the right specialized agent run — live, on your own words, powered by Claude.</p>
+
+    <div class="offer-strip">
+      <p class="offer-strip-label" data-i18n="offer.label">What I bring to this role</p>
+      <ul class="offer-list">
+        <li><span class="offer-icon" aria-hidden="true">🤖</span><span data-i18n="offer.bots">Build chatbots and conversational assistants, internal and customer-facing</span></li>
+        <li><span class="offer-icon" aria-hidden="true">🧠</span><span data-i18n="offer.claude">Use Claude (Anthropic) to power intelligent workflows and document processing</span></li>
+        <li><span class="offer-icon" aria-hidden="true">🔗</span><span data-i18n="offer.integrations">Design integrations across Workday, ERP, CRM, TMS and SAP</span></li>
+        <li><span class="offer-icon" aria-hidden="true">📄</span><span data-i18n="offer.idp">Extract structured data from freight documents (OCR/IDP judgment)</span></li>
+        <li><span class="offer-icon" aria-hidden="true">📊</span><span data-i18n="offer.dashboards">Build dashboards that monitor automation performance and KPIs</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="console-app">
+
+      <div class="objective-picker" id="objective-picker">
+        <button class="objective-chip active" data-objective="audit" type="button" data-i18n="obj.audit.label">Audit an ops workflow</button>
+        <button class="objective-chip" data-objective="opportunities" type="button" data-i18n="obj.opportunities.label">Find automation opportunities</button>
+        <button class="objective-chip" data-objective="bot" type="button" data-i18n="obj.bot.label">Design a conversational bot</button>
+        <button class="objective-chip" data-objective="integration" type="button" data-i18n="obj.integration.label">Design a Workday/ERP integration</button>
+        <button class="objective-chip" data-objective="document" type="button" data-i18n="obj.document.label">Process a freight document</button>
+        <button class="objective-chip" data-objective="dashboard" type="button" data-i18n="obj.dashboard.label">Build a KPI dashboard</button>
+        <button class="objective-chip" data-objective="docs" type="button" data-i18n="obj.docs.label">Document an automation</button>
+      </div>
+
+      <div class="console-input">
+        <label for="workflow-input" class="field-label" id="input-label" data-i18n="obj.audit.field">Describe a logistics/ops workflow</label>
+        <textarea id="workflow-input" rows="4" data-i18n-placeholder="obj.audit.placeholder" placeholder="Dispatch manually re-keys carrier rate confirmations from email into the TMS every day, and cross-checks HAZMAT documentation by hand before releasing a load."></textarea>
+        <div class="cta-row">
+          <button id="btn-run" class="btn btn-primary" type="button" data-i18n="obj.audit.run">Analyze workflow</button>
+          <button id="btn-example" class="btn btn-outline" type="button" data-i18n="common.tryExample">Try an example</button>
+        </div>
+        <p id="error-msg" class="error-msg" hidden></p>
+      </div>
+
+      <div class="pipeline" id="pipeline"></div>
+
+      <div class="console-log" id="console-log" aria-live="polite"></div>
+
+      <!-- ===== AUDIT RESULT ===== -->
+      <div class="result-panel" id="panel-audit" hidden>
+        <h3 data-i18n="panel.audit.title">Workflow Audit</h3>
+        <p class="panel-lede" data-field="current_process"></p>
+        <div class="audit-grid">
+          <div><h4 data-i18n="panel.audit.bottlenecks">Bottlenecks</h4><ul data-field="bottlenecks"></ul></div>
+          <div><h4 data-i18n="panel.audit.repetitive">Repetitive work</h4><ul data-field="repetitive_work"></ul></div>
+          <div><h4 data-i18n="panel.audit.systems">Systems involved</h4><ul data-field="systems_involved"></ul></div>
+          <div><h4 data-i18n="panel.audit.decisions">Human decision points</h4><ul data-field="human_decision_points"></ul></div>
+          <div><h4 data-i18n="panel.audit.risks">Potential risks</h4><ul data-field="potential_risks"></ul></div>
+        </div>
+        <h4 class="opportunities-title" data-i18n="panel.audit.opportunities">Automation opportunities</h4>
+        <div class="opportunity-list" data-field="opportunities"></div>
+      </div>
+
+      <!-- ===== PRIORITIZATION ===== -->
+      <div class="result-panel" id="panel-prioritize" hidden>
+        <h3 data-i18n="panel.prioritize.title">Opportunity Prioritization</h3>
+        <p class="data-note" data-field="data_note"></p>
+        <div class="quadrant" id="quadrant">
+          <div class="quadrant-cell" data-quadrant="quick_win"><span class="quadrant-label" data-i18n="panel.prioritize.quickWin">Quick win</span><div class="quadrant-items"></div></div>
+          <div class="quadrant-cell" data-quadrant="strategic"><span class="quadrant-label" data-i18n="panel.prioritize.strategic">Strategic</span><div class="quadrant-items"></div></div>
+          <div class="quadrant-cell" data-quadrant="experiment"><span class="quadrant-label" data-i18n="panel.prioritize.experiment">Experiment</span><div class="quadrant-items"></div></div>
+          <div class="quadrant-cell" data-quadrant="low_priority"><span class="quadrant-label" data-i18n="panel.prioritize.lowPriority">Low priority</span><div class="quadrant-items"></div></div>
+        </div>
+        <div class="table-wrap">
+          <table id="matrix-table">
+            <thead><tr>
+              <th data-i18n="panel.prioritize.col.opportunity">Opportunity</th>
+              <th data-i18n="panel.prioritize.col.impact">Business impact</th>
+              <th data-i18n="panel.prioritize.col.effort">Implementation effort</th>
+              <th data-i18n="panel.prioritize.col.frequency">Frequency</th>
+              <th data-i18n="panel.prioritize.col.risk">Risk</th>
+              <th data-i18n="panel.prioritize.col.priority">Priority</th>
+            </tr></thead>
+            <tbody data-field="matrix-rows"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== CONVERSATIONAL BOT BLUEPRINT ===== -->
+      <div class="result-panel" id="panel-bot" hidden>
+        <h3 data-i18n="panel.bot.title">Conversational Bot Blueprint</h3>
+        <span class="approach-badge" data-field="channel"></span>
+        <p class="panel-lede" data-field="problem"></p>
+        <div class="blueprint-diagram">
+          <div class="diagram-node" data-i18n="panel.bot.diagram.user">User message</div>
+          <div class="diagram-arrow">↓</div>
+          <div class="diagram-node diagram-node-ai" data-i18n="panel.bot.diagram.claude">Claude — intent + reply</div>
+          <div class="diagram-arrow">↓</div>
+          <div class="diagram-node" data-i18n="panel.bot.diagram.data">TMS / ERP / Workday / KB</div>
+          <div class="diagram-arrow">↓</div>
+          <div class="diagram-node" data-i18n="panel.bot.diagram.escalation">Escalation to human</div>
+        </div>
+        <div class="blueprint-grid">
+          <div><h4 data-i18n="panel.bot.sampleUser">Sample user message</h4><p data-field="sample_user_message"></p></div>
+          <div><h4 data-i18n="panel.bot.sampleReply">Sample bot reply</h4><p data-field="sample_bot_reply"></p></div>
+          <div><h4 data-i18n="panel.bot.intents">Intents handled</h4><ul data-field="intents"></ul></div>
+          <div><h4 data-i18n="panel.bot.dataSources">Data sources</h4><ul data-field="data_sources"></ul></div>
+          <div><h4 data-i18n="panel.bot.claudeRole">Claude's role</h4><p data-field="claude_role"></p></div>
+          <div><h4 data-i18n="panel.bot.escalation">Escalation rule</h4><p data-field="escalation_rule"></p></div>
+          <div><h4 data-i18n="panel.bot.guardrails">Guardrails</h4><ul data-field="guardrails"></ul></div>
+          <div><h4 data-i18n="panel.bot.metrics">Success metrics</h4><ul data-field="success_metrics"></ul></div>
+          <div><h4 data-i18n="panel.bot.steps">Implementation steps</h4><ol data-field="implementation_steps"></ol></div>
+        </div>
+      </div>
+
+      <!-- ===== INTEGRATION / WORKDAY BLUEPRINT ===== -->
+      <div class="result-panel" id="panel-integration" hidden>
+        <h3 data-i18n="panel.integration.title">Integration Blueprint</h3>
+        <span class="approach-badge" data-field="pattern"></span>
+        <p class="panel-lede" data-field="problem"></p>
+        <div class="blueprint-grid">
+          <div><h4 data-i18n="panel.integration.systems">Systems involved</h4><ul data-field="systems_involved"></ul></div>
+          <div><h4 data-i18n="panel.integration.trigger">Trigger</h4><p data-field="trigger"></p></div>
+          <div><h4 data-i18n="panel.integration.dataFlow">Data flow</h4><ol data-field="data_flow_steps"></ol></div>
+          <div><h4 data-i18n="panel.integration.method">Integration method</h4><p data-field="integration_method"></p></div>
+          <div><h4 data-i18n="panel.integration.errors">Error handling</h4><p data-field="error_handling"></p></div>
+          <div><h4 data-i18n="panel.integration.owner">Owner &amp; approval</h4><p data-field="owner_and_approval"></p></div>
+          <div><h4 data-i18n="panel.integration.metrics">Success metrics</h4><ul data-field="success_metrics"></ul></div>
+          <div><h4 data-i18n="panel.integration.risks">Risks</h4><ul data-field="risks"></ul></div>
+          <div><h4 data-i18n="panel.integration.steps">Implementation steps</h4><ol data-field="implementation_steps"></ol></div>
+        </div>
+      </div>
+
+      <!-- ===== DOCUMENT PROCESSOR (IDP) ===== -->
+      <div class="result-panel" id="panel-document" hidden>
+        <h3 data-i18n="panel.document.title">Document Extraction (IDP)</h3>
+        <span class="approach-badge" data-field="document_type"></span>
+        <div class="table-wrap">
+          <table class="field-table">
+            <thead><tr>
+              <th data-i18n="panel.document.col.field">Field</th>
+              <th data-i18n="panel.document.col.value">Extracted value</th>
+              <th data-i18n="panel.document.col.confidence">Confidence</th>
+            </tr></thead>
+            <tbody data-field="extracted_fields"></tbody>
+          </table>
+        </div>
+        <div class="review-list">
+          <h4 data-i18n="panel.document.flagged">Flagged for human review</h4>
+          <ul data-field="flagged_for_review"></ul>
+        </div>
+        <div class="blueprint-grid">
+          <div><h4 data-i18n="panel.document.downstream">Downstream action</h4><p data-field="downstream_action"></p></div>
+          <div><h4 data-i18n="panel.document.target">Target system</h4><p data-field="target_system"></p></div>
+          <div><h4 data-i18n="panel.document.note">Automation note</h4><p data-field="automation_note"></p></div>
+        </div>
+      </div>
+
+      <!-- ===== KPI DASHBOARD ===== -->
+      <div class="result-panel" id="panel-dashboard" hidden>
+        <h3 data-field="dashboard_title"></h3>
+        <p class="panel-lede" data-field="audience"></p>
+        <div class="kpi-grid" data-field="kpis"></div>
+        <div class="blueprint-grid">
+          <div><h4 data-i18n="panel.dashboard.sources">Data sources</h4><ul data-field="data_sources"></ul></div>
+          <div><h4 data-i18n="panel.dashboard.cadence">Refresh cadence</h4><p data-field="refresh_cadence"></p></div>
+        </div>
+        <h4 data-i18n="panel.dashboard.layout">Chart layout</h4>
+        <div class="chart-layout-list" data-field="chart_layout"></div>
+        <div class="alert-box" data-field="alert_condition"></div>
+      </div>
+
+      <!-- ===== AUTOMATION DOCUMENTATION ===== -->
+      <div class="result-panel" id="panel-docs" hidden>
+        <div class="brief-header">
+          <h3 data-i18n="panel.docs.title">Automation Documentation</h3>
+        </div>
+        <div class="brief-tabs" id="brief-tabs">
+          <button class="tab-btn active" data-brief-tab="executive_summary" type="button" data-i18n="panel.docs.tab.summary">Executive Summary</button>
+          <button class="tab-btn" data-brief-tab="technical_approach" type="button" data-i18n="panel.docs.tab.approach">Technical Approach</button>
+          <button class="tab-btn" data-brief-tab="monitoring_and_troubleshooting" type="button" data-i18n="panel.docs.tab.monitoring">Monitoring &amp; Troubleshooting</button>
+          <button class="tab-btn" data-brief-tab="adoption_plan" type="button" data-i18n="panel.docs.tab.adoption">Adoption Plan</button>
+          <button class="tab-btn" data-brief-tab="metrics" type="button" data-i18n="panel.docs.tab.metrics">Metrics</button>
+        </div>
+        <div class="brief-panels">
+          <p class="brief-panel active" data-brief-panel="executive_summary"></p>
+          <p class="brief-panel" data-brief-panel="technical_approach"></p>
+          <p class="brief-panel" data-brief-panel="monitoring_and_troubleshooting"></p>
+          <p class="brief-panel" data-brief-panel="adoption_plan"></p>
+          <p class="brief-panel" data-brief-panel="metrics"></p>
+        </div>
+        <button id="btn-download-docs" class="btn btn-outline btn-sm" type="button" data-i18n="panel.docs.download">Download as Markdown</button>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. HOW IT WORKS ============ -->
+<section id="how" class="section alt">
+  <div class="container">
+    <h2 data-i18n="how.title">How it works</h2>
+    <p class="section-intro" data-i18n="how.intro">One goal picker routes your input to the right specialized agent — each one mapped directly to a responsibility of the Digital Transformation & Automation Specialist role.</p>
+    <div class="how-grid">
+      <div class="how-agent"><strong data-i18n="how.auditor.name">Process Auditor</strong><p data-i18n="how.auditor.desc">Understands the operational workflow before recommending anything.</p></div>
+      <div class="how-agent"><strong data-i18n="how.prioritizer.name">Prioritizer</strong><p data-i18n="how.prioritizer.desc">Scores impact vs. effort — no invented ROI.</p></div>
+      <div class="how-agent"><strong data-i18n="how.botDesigner.name">Bot Designer</strong><p data-i18n="how.botDesigner.desc">Designs conversational assistants with a real escalation path.</p></div>
+      <div class="how-agent"><strong data-i18n="how.integrationArchitect.name">Integration Architect</strong><p data-i18n="how.integrationArchitect.desc">Designs Workday and enterprise-system automations.</p></div>
+      <div class="how-agent"><strong data-i18n="how.documentProcessor.name">Document Processor</strong><p data-i18n="how.documentProcessor.desc">Extracts structured fields and flags what needs human review.</p></div>
+      <div class="how-agent"><strong data-i18n="how.dashboardDesigner.name">Dashboard Designer</strong><p data-i18n="how.dashboardDesigner.desc">Defines the KPIs that prove an automation is working.</p></div>
+      <div class="how-agent"><strong data-i18n="how.documenter.name">Documenter</strong><p data-i18n="how.documenter.desc">Turns a decision into something a team can run without me.</p></div>
+    </div>
+    <div class="table-wrap">
+      <table id="how-table">
+        <thead><tr>
+          <th data-i18n="how.col.goal">Goal</th>
+          <th data-i18n="how.col.agent">Agent(s) used</th>
+          <th data-i18n="how.col.responsibility">Job responsibility demonstrated</th>
+        </tr></thead>
+        <tbody>
+          <tr><td data-i18n="obj.audit.label">Audit an ops workflow</td><td data-i18n="how.auditor.name">Process Auditor</td><td data-i18n="how.row.audit">Prioritize automation opportunities</td></tr>
+          <tr><td data-i18n="obj.opportunities.label">Find automation opportunities</td><td><span data-i18n="how.auditor.name">Process Auditor</span> → <span data-i18n="how.prioritizer.name">Prioritizer</span></td><td data-i18n="how.row.opportunities">Collaborate to prioritize automation opportunities</td></tr>
+          <tr><td data-i18n="obj.bot.label">Design a conversational bot</td><td data-i18n="how.botDesigner.name">Bot Designer</td><td data-i18n="how.row.bot">Build chatbots/conversational assistants with Claude</td></tr>
+          <tr><td data-i18n="obj.integration.label">Design a Workday/ERP integration</td><td data-i18n="how.integrationArchitect.name">Integration Architect</td><td data-i18n="how.row.integration">Configure Workday and integrate ERP/CRM/TMS/SAP</td></tr>
+          <tr><td data-i18n="obj.document.label">Process a freight document</td><td data-i18n="how.documentProcessor.name">Document Processor</td><td data-i18n="how.row.document">OCR/IDP document processing</td></tr>
+          <tr><td data-i18n="obj.dashboard.label">Build a KPI dashboard</td><td data-i18n="how.dashboardDesigner.name">Dashboard Designer</td><td data-i18n="how.row.dashboard">Monitor automation performance and KPIs</td></tr>
+          <tr><td data-i18n="obj.docs.label">Document an automation</td><td data-i18n="how.documenter.name">Documenter</td><td data-i18n="how.row.docs">Document automations; support monitoring and optimization</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3. WHAT THIS DEMONSTRATES ============ -->
+<section id="capabilities" class="section">
+  <div class="container">
+    <h2 data-i18n="cap.title">What this demonstrates</h2>
+    <p class="section-intro" data-i18n="cap.intro">Every result above is generated live by Claude when you run it — nothing on this page is pre-written.</p>
+    <div class="cap-grid">
+      <span class="cap-tag" data-i18n="cap.rpa">RPA &amp; workflow automation</span>
+      <span class="cap-tag" data-i18n="cap.bots">Chatbots &amp; conversational assistants</span>
+      <span class="cap-tag" data-i18n="cap.claude">Claude (Anthropic) / LLM integration</span>
+      <span class="cap-tag" data-i18n="cap.workday">Workday configuration &amp; business process automation</span>
+      <span class="cap-tag" data-i18n="cap.api">API (REST/SOAP) &amp; SQL integration</span>
+      <span class="cap-tag" data-i18n="cap.idp">OCR / Intelligent Document Processing</span>
+      <span class="cap-tag" data-i18n="cap.dashboards">Dashboards &amp; KPI monitoring</span>
+      <span class="cap-tag" data-i18n="cap.docs">Documentation &amp; enablement</span>
+      <span class="cap-tag" data-i18n="cap.judgment">Implementation judgment — right tool for the job</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4. PROFILE & CONTACT ============ -->
+<section id="contact" class="section alt">
+  <div class="container">
+    <h2 data-i18n="contact.title">Contact</h2>
+    <p data-i18n="contact.line">Available to discuss the Digital Transformation &amp; Automation Specialist role at Charger Logistics.</p>
+    <p class="contact-email">sarahicruzsalazar@gmail.com</p>
+    <a class="link additional-work" href="https://github.com/apogeoconsara/PortafolioAI" target="_blank" rel="noopener" data-i18n="contact.additional">View additional work →</a>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <p>© 2026 Sarahí Cruz Salazar · <span data-i18n="footer.built">Built with Netlify Functions + Claude (Anthropic)</span></p>
+  </div>
+</footer>
+
+<script src="assets/js/console.js"></script>
+</body>
+</html>

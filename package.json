@@ -1,0 +1,10 @@
+{
+  "name": "charger-automation-assistant",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Automation & Digital Transformation Assistant - portfolio for the Digital Transformation & Automation Specialist role at Charger Logistics",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "@netlify/functions": "^2.8.1"
+  }
+}
