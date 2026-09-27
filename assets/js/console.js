@@ -1,5 +1,5 @@
-const $ = (sel) => document.querySelector(sel);
-const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+const $ = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
 function escapeHtml(str) {
   const div = document.createElement("div");
@@ -7,798 +7,750 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-function fillList(el, items) {
-  el.innerHTML = (items || []).map((i) => `<li>${escapeHtml(i)}</li>`).join("");
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /* ============================================================
-   i18n
+   Tab switching
    ============================================================ */
 
-const I18N = {
-  en: {
-    "nav.assistant": "Assistant",
-    "nav.how": "How it works",
-    "nav.capabilities": "Capabilities",
-    "nav.contact": "Contact",
-    "hero.role": "Digital Transformation & Automation Specialist — Charger Logistics",
-    "hero.h1": "One assistant. Seven ways to automate a logistics operation with AI.",
-    "hero.lead": "Pick a goal, describe your situation, and watch the right specialized agent run — live, on your own words, powered by Claude.",
-    "offer.label": "What I bring to this role",
-    "offer.bots": "Build chatbots and conversational assistants, internal and customer-facing",
-    "offer.claude": "Use Claude (Anthropic) to power intelligent workflows and document processing",
-    "offer.integrations": "Design integrations across Workday, ERP, CRM, TMS and SAP",
-    "offer.idp": "Extract structured data from freight documents (OCR/IDP judgment)",
-    "offer.dashboards": "Build dashboards that monitor automation performance and KPIs",
-    "common.tryExample": "Try an example",
-    "panel.audit.title": "Workflow Audit",
-    "panel.audit.bottlenecks": "Bottlenecks",
-    "panel.audit.repetitive": "Repetitive work",
-    "panel.audit.systems": "Systems involved",
-    "panel.audit.decisions": "Human decision points",
-    "panel.audit.risks": "Potential risks",
-    "panel.audit.opportunities": "Automation opportunities",
-    "panel.prioritize.title": "Opportunity Prioritization",
-    "panel.prioritize.quickWin": "Quick win",
-    "panel.prioritize.strategic": "Strategic",
-    "panel.prioritize.experiment": "Experiment",
-    "panel.prioritize.lowPriority": "Low priority",
-    "panel.prioritize.col.opportunity": "Opportunity",
-    "panel.prioritize.col.impact": "Business impact",
-    "panel.prioritize.col.effort": "Implementation effort",
-    "panel.prioritize.col.frequency": "Frequency",
-    "panel.prioritize.col.risk": "Risk",
-    "panel.prioritize.col.priority": "Priority",
-    "panel.bot.title": "Conversational Bot Blueprint",
-    "panel.bot.diagram.user": "User message",
-    "panel.bot.diagram.claude": "Claude — intent + reply",
-    "panel.bot.diagram.data": "TMS / ERP / Workday / KB",
-    "panel.bot.diagram.escalation": "Escalation to human",
-    "panel.bot.sampleUser": "Sample user message",
-    "panel.bot.sampleReply": "Sample bot reply",
-    "panel.bot.intents": "Intents handled",
-    "panel.bot.dataSources": "Data sources",
-    "panel.bot.claudeRole": "Claude's role",
-    "panel.bot.escalation": "Escalation rule",
-    "panel.bot.guardrails": "Guardrails",
-    "panel.bot.metrics": "Success metrics",
-    "panel.bot.steps": "Implementation steps",
-    "panel.integration.title": "Integration Blueprint",
-    "panel.integration.systems": "Systems involved",
-    "panel.integration.trigger": "Trigger",
-    "panel.integration.dataFlow": "Data flow",
-    "panel.integration.method": "Integration method",
-    "panel.integration.errors": "Error handling",
-    "panel.integration.owner": "Owner & approval",
-    "panel.integration.metrics": "Success metrics",
-    "panel.integration.risks": "Risks",
-    "panel.integration.steps": "Implementation steps",
-    "panel.document.title": "Document Extraction (IDP)",
-    "panel.document.col.field": "Field",
-    "panel.document.col.value": "Extracted value",
-    "panel.document.col.confidence": "Confidence",
-    "panel.document.flagged": "Flagged for human review",
-    "panel.document.downstream": "Downstream action",
-    "panel.document.target": "Target system",
-    "panel.document.note": "Automation note",
-    "panel.dashboard.sources": "Data sources",
-    "panel.dashboard.cadence": "Refresh cadence",
-    "panel.dashboard.layout": "Chart layout",
-    "panel.docs.title": "Automation Documentation",
-    "panel.docs.tab.summary": "Executive Summary",
-    "panel.docs.tab.approach": "Technical Approach",
-    "panel.docs.tab.monitoring": "Monitoring & Troubleshooting",
-    "panel.docs.tab.adoption": "Adoption Plan",
-    "panel.docs.tab.metrics": "Metrics",
-    "panel.docs.download": "Download as Markdown",
-    "how.title": "How it works",
-    "how.intro": "One goal picker routes your input to the right specialized agent — each one mapped directly to a responsibility of the Digital Transformation & Automation Specialist role.",
-    "how.auditor.name": "Process Auditor",
-    "how.auditor.desc": "Understands the operational workflow before recommending anything.",
-    "how.prioritizer.name": "Prioritizer",
-    "how.prioritizer.desc": "Scores impact vs. effort — no invented ROI.",
-    "how.botDesigner.name": "Bot Designer",
-    "how.botDesigner.desc": "Designs conversational assistants with a real escalation path.",
-    "how.integrationArchitect.name": "Integration Architect",
-    "how.integrationArchitect.desc": "Designs Workday and enterprise-system automations.",
-    "how.documentProcessor.name": "Document Processor",
-    "how.documentProcessor.desc": "Extracts structured fields and flags what needs human review.",
-    "how.dashboardDesigner.name": "Dashboard Designer",
-    "how.dashboardDesigner.desc": "Defines the KPIs that prove an automation is working.",
-    "how.documenter.name": "Documenter",
-    "how.documenter.desc": "Turns a decision into something a team can run without me.",
-    "how.col.goal": "Goal",
-    "how.col.agent": "Agent(s) used",
-    "how.col.responsibility": "Job responsibility demonstrated",
-    "how.row.audit": "Prioritize automation opportunities",
-    "how.row.opportunities": "Collaborate to prioritize automation opportunities",
-    "how.row.bot": "Build chatbots/conversational assistants with Claude",
-    "how.row.integration": "Configure Workday and integrate ERP/CRM/TMS/SAP",
-    "how.row.document": "OCR/IDP document processing",
-    "how.row.dashboard": "Monitor automation performance and KPIs",
-    "how.row.docs": "Document automations; support monitoring and optimization",
-    "cap.title": "What this demonstrates",
-    "cap.intro": "Every result above is generated live by Claude when you run it — nothing on this page is pre-written.",
-    "cap.rpa": "RPA & workflow automation",
-    "cap.bots": "Chatbots & conversational assistants",
-    "cap.claude": "Claude (Anthropic) / LLM integration",
-    "cap.workday": "Workday configuration & business process automation",
-    "cap.api": "API (REST/SOAP) & SQL integration",
-    "cap.idp": "OCR / Intelligent Document Processing",
-    "cap.dashboards": "Dashboards & KPI monitoring",
-    "cap.docs": "Documentation & enablement",
-    "cap.judgment": "Implementation judgment — right tool for the job",
-    "contact.title": "Contact",
-    "contact.line": "Available to discuss the Digital Transformation & Automation Specialist role at Charger Logistics.",
-    "contact.additional": "View additional work →",
-    "footer.built": "Built with Netlify Functions + Claude (Anthropic)",
-    "obj.audit.label": "Audit an ops workflow",
-    "obj.audit.field": "Describe a logistics/ops workflow",
-    "obj.audit.placeholder": "Dispatch manually re-keys carrier rate confirmations from email into the TMS every day, and cross-checks HAZMAT documentation by hand before releasing a load.",
-    "obj.audit.run": "Analyze workflow",
-    "obj.opportunities.label": "Find automation opportunities",
-    "obj.opportunities.field": "Describe a logistics/ops workflow",
-    "obj.opportunities.placeholder": "Customer service answers the same 'where is my shipment' questions all day by manually checking the TMS and replying over email.",
-    "obj.opportunities.run": "Find opportunities",
-    "obj.bot.label": "Design a conversational bot",
-    "obj.bot.field": "Describe the bot use case",
-    "obj.bot.placeholder": "Drivers text dispatch asking for their next load's pickup address and delivery window instead of checking the app.",
-    "obj.bot.run": "Design bot",
-    "obj.integration.label": "Design a Workday/ERP integration",
-    "obj.integration.field": "Describe the integration or Workday need",
-    "obj.integration.placeholder": "When a new driver is hired in Workday, ops still manually creates their profile in the TMS and adds them to the HubSpot dispatch list.",
-    "obj.integration.run": "Design integration",
-    "obj.document.label": "Process a freight document",
-    "obj.document.field": "Describe the document to extract",
-    "obj.document.placeholder": "A signed Proof of Delivery scanned by the driver, showing consignee name, delivery date/time, and a note about one damaged pallet.",
-    "obj.document.run": "Extract fields",
-    "obj.dashboard.label": "Build a KPI dashboard",
-    "obj.dashboard.field": "Describe the automation to monitor",
-    "obj.dashboard.placeholder": "A bot that auto-extracts rate confirmations from carrier emails and creates the load in the TMS, running since last month.",
-    "obj.dashboard.run": "Build dashboard",
-    "obj.docs.label": "Document an automation",
-    "obj.docs.field": "Describe an automation that's already decided",
-    "obj.docs.placeholder": "We're building a Claude-powered bot that reads incoming carrier invoices, matches them to the TMS load, and flags mismatches for AP review.",
-    "obj.docs.run": "Generate documentation",
-  },
-  es: {
-    "nav.assistant": "Asistente",
-    "nav.how": "Cómo funciona",
-    "nav.capabilities": "Capacidades",
-    "nav.contact": "Contacto",
-    "hero.role": "Digital Transformation & Automation Specialist — Charger Logistics",
-    "hero.h1": "Un asistente. Siete formas de automatizar una operación logística con IA.",
-    "hero.lead": "Elige un objetivo, describe tu situación, y observa el agente especializado correcto ejecutarse — en vivo, con tus propias palabras, con Claude.",
-    "offer.label": "Qué aporto a este puesto",
-    "offer.bots": "Construir chatbots y asistentes conversacionales, internos y de cara al cliente",
-    "offer.claude": "Usar Claude (Anthropic) para potenciar flujos inteligentes y procesamiento de documentos",
-    "offer.integrations": "Diseñar integraciones entre Workday, ERP, CRM, TMS y SAP",
-    "offer.idp": "Extraer datos estructurados de documentos de carga (criterio OCR/IDP)",
-    "offer.dashboards": "Construir dashboards que monitorean el desempeño de las automatizaciones y sus KPIs",
-    "common.tryExample": "Probar un ejemplo",
-    "panel.audit.title": "Auditoría del flujo de trabajo",
-    "panel.audit.bottlenecks": "Cuellos de botella",
-    "panel.audit.repetitive": "Trabajo repetitivo",
-    "panel.audit.systems": "Sistemas involucrados",
-    "panel.audit.decisions": "Puntos de decisión humana",
-    "panel.audit.risks": "Riesgos potenciales",
-    "panel.audit.opportunities": "Oportunidades de automatización",
-    "panel.prioritize.title": "Priorización de oportunidades",
-    "panel.prioritize.quickWin": "Quick win",
-    "panel.prioritize.strategic": "Estratégico",
-    "panel.prioritize.experiment": "Experimento",
-    "panel.prioritize.lowPriority": "Baja prioridad",
-    "panel.prioritize.col.opportunity": "Oportunidad",
-    "panel.prioritize.col.impact": "Impacto de negocio",
-    "panel.prioritize.col.effort": "Esfuerzo de implementación",
-    "panel.prioritize.col.frequency": "Frecuencia",
-    "panel.prioritize.col.risk": "Riesgo",
-    "panel.prioritize.col.priority": "Prioridad",
-    "panel.bot.title": "Blueprint del bot conversacional",
-    "panel.bot.diagram.user": "Mensaje del usuario",
-    "panel.bot.diagram.claude": "Claude — intención + respuesta",
-    "panel.bot.diagram.data": "TMS / ERP / Workday / KB",
-    "panel.bot.diagram.escalation": "Escalamiento a humano",
-    "panel.bot.sampleUser": "Mensaje de ejemplo del usuario",
-    "panel.bot.sampleReply": "Respuesta de ejemplo del bot",
-    "panel.bot.intents": "Intenciones que maneja",
-    "panel.bot.dataSources": "Fuentes de datos",
-    "panel.bot.claudeRole": "Rol de Claude",
-    "panel.bot.escalation": "Regla de escalamiento",
-    "panel.bot.guardrails": "Guardrails",
-    "panel.bot.metrics": "Métricas de éxito",
-    "panel.bot.steps": "Pasos de implementación",
-    "panel.integration.title": "Blueprint de integración",
-    "panel.integration.systems": "Sistemas involucrados",
-    "panel.integration.trigger": "Disparador",
-    "panel.integration.dataFlow": "Flujo de datos",
-    "panel.integration.method": "Método de integración",
-    "panel.integration.errors": "Manejo de errores",
-    "panel.integration.owner": "Dueño y aprobación",
-    "panel.integration.metrics": "Métricas de éxito",
-    "panel.integration.risks": "Riesgos",
-    "panel.integration.steps": "Pasos de implementación",
-    "panel.document.title": "Extracción de documento (IDP)",
-    "panel.document.col.field": "Campo",
-    "panel.document.col.value": "Valor extraído",
-    "panel.document.col.confidence": "Confianza",
-    "panel.document.flagged": "Marcado para revisión humana",
-    "panel.document.downstream": "Acción posterior",
-    "panel.document.target": "Sistema destino",
-    "panel.document.note": "Nota de automatización",
-    "panel.dashboard.sources": "Fuentes de datos",
-    "panel.dashboard.cadence": "Frecuencia de actualización",
-    "panel.dashboard.layout": "Disposición de gráficos",
-    "panel.docs.title": "Documentación de automatización",
-    "panel.docs.tab.summary": "Resumen ejecutivo",
-    "panel.docs.tab.approach": "Enfoque técnico",
-    "panel.docs.tab.monitoring": "Monitoreo y resolución",
-    "panel.docs.tab.adoption": "Plan de adopción",
-    "panel.docs.tab.metrics": "Métricas",
-    "panel.docs.download": "Descargar como Markdown",
-    "how.title": "Cómo funciona",
-    "how.intro": "Un selector de objetivo enruta tu descripción hacia el agente especializado correcto — cada uno mapeado directamente a una responsabilidad del puesto de Digital Transformation & Automation Specialist.",
-    "how.auditor.name": "Auditor de procesos",
-    "how.auditor.desc": "Entiende el flujo operativo antes de recomendar cualquier cosa.",
-    "how.prioritizer.name": "Priorizador",
-    "how.prioritizer.desc": "Puntúa impacto vs. esfuerzo — sin inventar ROI.",
-    "how.botDesigner.name": "Diseñador de bots",
-    "how.botDesigner.desc": "Diseña asistentes conversacionales con una ruta real de escalamiento.",
-    "how.integrationArchitect.name": "Arquitecto de integración",
-    "how.integrationArchitect.desc": "Diseña automatizaciones de Workday y sistemas empresariales.",
-    "how.documentProcessor.name": "Procesador de documentos",
-    "how.documentProcessor.desc": "Extrae campos estructurados y marca lo que necesita revisión humana.",
-    "how.dashboardDesigner.name": "Diseñador de dashboards",
-    "how.dashboardDesigner.desc": "Define los KPIs que demuestran que una automatización funciona.",
-    "how.documenter.name": "Documentador",
-    "how.documenter.desc": "Convierte una decisión en algo que el equipo puede operar sin mí.",
-    "how.col.goal": "Objetivo",
-    "how.col.agent": "Agente(s) usados",
-    "how.col.responsibility": "Responsabilidad del puesto que demuestra",
-    "how.row.audit": "Priorizar oportunidades de automatización",
-    "how.row.opportunities": "Colaborar para priorizar oportunidades de automatización",
-    "how.row.bot": "Construir chatbots/asistentes conversacionales con Claude",
-    "how.row.integration": "Configurar Workday e integrar ERP/CRM/TMS/SAP",
-    "how.row.document": "Procesamiento de documentos OCR/IDP",
-    "how.row.dashboard": "Monitorear el desempeño de automatizaciones y KPIs",
-    "how.row.docs": "Documentar automatizaciones; dar soporte a monitoreo y optimización",
-    "cap.title": "Qué demuestra esto",
-    "cap.intro": "Cada resultado de arriba se genera en vivo con Claude al ejecutarlo — nada en esta página está preescrito.",
-    "cap.rpa": "RPA y automatización de flujos",
-    "cap.bots": "Chatbots y asistentes conversacionales",
-    "cap.claude": "Integración de Claude (Anthropic) / LLMs",
-    "cap.workday": "Configuración de Workday y automatización de procesos de negocio",
-    "cap.api": "Integración vía API (REST/SOAP) y SQL",
-    "cap.idp": "OCR / Procesamiento inteligente de documentos",
-    "cap.dashboards": "Dashboards y monitoreo de KPIs",
-    "cap.docs": "Documentación y habilitación",
-    "cap.judgment": "Criterio de implementación — la herramienta correcta para cada caso",
-    "contact.title": "Contacto",
-    "contact.line": "Disponible para conversar sobre la posición de Digital Transformation & Automation Specialist en Charger Logistics.",
-    "contact.additional": "Ver más trabajo →",
-    "footer.built": "Construido con Netlify Functions + Claude (Anthropic)",
-    "obj.audit.label": "Auditar un flujo operativo",
-    "obj.audit.field": "Describe un flujo logístico/operativo",
-    "obj.audit.placeholder": "Dispatch re-captura a mano las confirmaciones de tarifa de los transportistas desde el correo hacia el TMS cada día, y revisa a mano la documentación HAZMAT antes de liberar una carga.",
-    "obj.audit.run": "Analizar flujo",
-    "obj.opportunities.label": "Encontrar oportunidades de automatización",
-    "obj.opportunities.field": "Describe un flujo logístico/operativo",
-    "obj.opportunities.placeholder": "Servicio al cliente responde todo el día la misma pregunta de '¿dónde está mi envío?' revisando el TMS a mano y contestando por correo.",
-    "obj.opportunities.run": "Encontrar oportunidades",
-    "obj.bot.label": "Diseñar un bot conversacional",
-    "obj.bot.field": "Describe el caso de uso del bot",
-    "obj.bot.placeholder": "Los conductores le escriben a dispatch preguntando la dirección de recogida y la ventana de entrega de su siguiente carga en lugar de revisar la app.",
-    "obj.bot.run": "Diseñar bot",
-    "obj.integration.label": "Diseñar una integración Workday/ERP",
-    "obj.integration.field": "Describe la necesidad de integración o de Workday",
-    "obj.integration.placeholder": "Cuando se contrata a un conductor nuevo en Workday, operaciones todavía crea su perfil a mano en el TMS y lo agrega a la lista de dispatch en HubSpot.",
-    "obj.integration.run": "Diseñar integración",
-    "obj.document.label": "Procesar un documento de carga",
-    "obj.document.field": "Describe el documento a extraer",
-    "obj.document.placeholder": "Un Proof of Delivery firmado y escaneado por el conductor, con el nombre del consignatario, fecha/hora de entrega y una nota sobre un tarima dañada.",
-    "obj.document.run": "Extraer campos",
-    "obj.dashboard.label": "Construir un dashboard de KPIs",
-    "obj.dashboard.field": "Describe la automatización a monitorear",
-    "obj.dashboard.placeholder": "Un bot que extrae automáticamente las confirmaciones de tarifa de los correos de transportistas y crea la carga en el TMS, funcionando desde el mes pasado.",
-    "obj.dashboard.run": "Construir dashboard",
-    "obj.docs.label": "Documentar una automatización",
-    "obj.docs.field": "Describe una automatización ya decidida",
-    "obj.docs.placeholder": "Vamos a construir un bot con Claude que lee las facturas entrantes de transportistas, las cruza con la carga en el TMS, y marca discrepancias para revisión de cuentas por pagar.",
-    "obj.docs.run": "Generar documentación",
-  },
-};
+const tabButtons = $$(".console-tab");
+const modulePanels = $$(".module-panel");
 
-let currentLang = localStorage.getItem("lang") === "es" ? "es" : "en";
-
-function t(key) {
-  return (I18N[currentLang] && I18N[currentLang][key]) || I18N.en[key] || key;
-}
-
-function applyStaticTranslations() {
-  $$("[data-i18n]").forEach((el) => {
-    el.textContent = t(el.dataset.i18n);
+function activateTab(tabName) {
+  tabButtons.forEach((btn) => btn.classList.toggle("active", btn.dataset.tab === tabName));
+  modulePanels.forEach((panel) => {
+    panel.hidden = panel.dataset.module !== tabName;
   });
-  $$("[data-i18n-placeholder]").forEach((el) => {
-    el.placeholder = t(el.dataset.i18nPlaceholder);
-  });
-  document.documentElement.lang = currentLang;
 }
 
-function setLang(lang) {
-  currentLang = lang;
-  localStorage.setItem("lang", lang);
-  $("#lang-en").classList.toggle("active", lang === "en");
-  $("#lang-es").classList.toggle("active", lang === "es");
-  applyStaticTranslations();
-  applyObjective(currentObjective, { keepInput: true });
-}
-
-$("#lang-en").addEventListener("click", () => setLang("en"));
-$("#lang-es").addEventListener("click", () => setLang("es"));
+tabButtons.forEach((btn) => {
+  btn.addEventListener("click", () => activateTab(btn.dataset.tab));
+});
 
 /* ============================================================
-   Objectives
+   MODULE 1 · AI Operations Copilot
    ============================================================ */
 
-const OBJECTIVES = {
-  audit: { steps: ["auditor"] },
-  opportunities: { steps: ["auditor", "prioritizer"] },
-  bot: { steps: ["botDesigner"] },
-  integration: { steps: ["integrationArchitect"] },
-  document: { steps: ["documentProcessor"] },
-  dashboard: { steps: ["dashboardDesigner"] },
-  docs: { steps: ["documenter"] },
+const COPILOT_SCENARIOS = {
+  attention: {
+    userText: "What shipments need attention today?",
+    trace: [
+      "Query TMS for shipments flagged exception, delayed, or missing-document",
+      "Cross-reference HAZMAT / compliance flags for priority",
+      "Rank by severity and customer SLA impact",
+      "Apply guardrail: read-only — no shipment status modified",
+    ],
+    answer:
+      "3 shipments need attention today — one HAZMAT compliance hold, one delayed customer-committed load, and one missing a signed POD.",
+    structured: {
+      type: "table",
+      headers: ["Shipment", "Issue", "Severity", "Recommended action"],
+      rows: [
+        ["LD-48213", "HAZMAT manifest unsigned", "High", "Hold release, notify compliance"],
+        ["LD-48097", "2h behind SLA window", "Medium", "Notify customer, expedite"],
+        ["LD-48350", "POD missing signature", "Low", "Request re-upload from driver"],
+      ],
+    },
+    badges: [{ type: "guardrail", text: "Read-only query — no shipment status changed automatically" }],
+  },
+  exceptions: {
+    userText: "Summarize today's exceptions",
+    trace: [
+      "Pull all exception-tagged records from the last 24 hours",
+      "Group by exception type",
+      "Compute counts and trend vs. yesterday",
+    ],
+    answer: "12 exceptions logged today, up from 9 yesterday. Documentation issues are the largest category.",
+    structured: {
+      type: "table",
+      headers: ["Exception type", "Count", "Change vs. yesterday"],
+      rows: [
+        ["Missing / incomplete document", "5", "+2"],
+        ["Delivery delay", "4", "+1"],
+        ["Damage reported", "2", "0"],
+        ["HAZMAT compliance hold", "1", "0"],
+      ],
+    },
+    badges: [{ type: "guardrail", text: "Aggregation only — individual case detail requires drill-down" }],
+  },
+  document: {
+    userText: "What document is missing for this shipment?",
+    trace: [
+      "Look up required document checklist for this shipment type (standard dry van delivery)",
+      "Compare against documents on file for LD-48350",
+      "Identify the gap",
+    ],
+    answer:
+      "Shipment LD-48350 is missing a signed Proof of Delivery. The POD was uploaded, but the signature field is blank.",
+    structured: {
+      type: "checklist",
+      items: [
+        { text: "Bill of Lading", ok: true },
+        { text: "Rate Confirmation", ok: true },
+        { text: "Proof of Delivery — signature missing", ok: false },
+        { text: "Delivery photos", ok: true },
+      ],
+    },
+    badges: [
+      { type: "guardrail", text: "Cannot generate or approve a document — flags the gap for the ops team" },
+    ],
+  },
+  escalate: {
+    userText: "Escalate this case to a person",
+    trace: [
+      "Identify case context: LD-48213, HAZMAT manifest unsigned",
+      "Match escalation rule: HAZMAT / compliance → always human, no autonomous resolution",
+      "Create handoff ticket with full context attached",
+    ],
+    answer:
+      "Escalated. A human dispatcher will take it from here — I don't resolve HAZMAT compliance holds autonomously.",
+    structured: {
+      type: "handoff",
+      fields: {
+        Ticket: "#HD-2291",
+        "Assigned to": "Compliance Team",
+        Priority: "High",
+        "Context attached": "Manifest status, shipment ID, flagged reason",
+      },
+    },
+    badges: [{ type: "escalation", text: "Required by guardrail — not left to model judgment" }],
+  },
 };
 
-const STEP_LABEL_KEY = {
-  auditor: "how.auditor.name",
-  prioritizer: "how.prioritizer.name",
-  botDesigner: "how.botDesigner.name",
-  integrationArchitect: "how.integrationArchitect.name",
-  documentProcessor: "how.documentProcessor.name",
-  dashboardDesigner: "how.dashboardDesigner.name",
-  documenter: "how.documenter.name",
-};
-
-let currentObjective = "audit";
-
-const elInput = $("#workflow-input");
-const elInputLabel = $("#input-label");
-const elBtnRun = $("#btn-run");
-const elBtnExample = $("#btn-example");
-const elError = $("#error-msg");
-const elPipeline = $("#pipeline");
-
-function applyObjective(objective, opts = {}) {
-  currentObjective = objective;
-  $$(".objective-chip").forEach((chip) => chip.classList.toggle("active", chip.dataset.objective === objective));
-
-  elInputLabel.textContent = t(`obj.${objective}.field`);
-  elInput.placeholder = t(`obj.${objective}.placeholder`);
-  elBtnRun.textContent = t(`obj.${objective}.run`);
-  if (!opts.keepInput) elInput.value = "";
-
-  renderPipelineStages(OBJECTIVES[objective].steps);
-  resetResults();
+function renderStructured(structured) {
+  if (structured.type === "table") {
+    const head = structured.headers.map((h) => `<th>${escapeHtml(h)}</th>`).join("");
+    const rows = structured.rows
+      .map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`)
+      .join("");
+    return `<div class="table-wrap"><table class="data-table"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
+  }
+  if (structured.type === "checklist") {
+    return `<ul class="chat-checklist">${structured.items
+      .map(
+        (item) =>
+          `<li><span class="${item.ok ? "check-ok" : "check-fail"}">${item.ok ? "✓" : "✗"}</span>${escapeHtml(item.text)}</li>`
+      )
+      .join("")}</ul>`;
+  }
+  if (structured.type === "handoff") {
+    const rows = Object.entries(structured.fields)
+      .map(([k, v]) => `<div><strong>${escapeHtml(k)}:</strong> ${escapeHtml(v)}</div>`)
+      .join("");
+    return `<div class="handoff-card">${rows}</div>`;
+  }
+  return "";
 }
 
-function renderPipelineStages(steps) {
-  elPipeline.innerHTML = steps
+const elCopilotChat = $("#copilot-chat");
+
+function appendUserBubble(text) {
+  const div = document.createElement("div");
+  div.className = "chat-msg-user";
+  div.textContent = text;
+  elCopilotChat.appendChild(div);
+}
+
+function appendAssistantScenario(scenario) {
+  const div = document.createElement("div");
+  div.className = "chat-msg-assistant";
+  const badgesHtml = scenario.badges
     .map(
-      (step, i) => `
-      ${i > 0 ? '<div class="pipeline-arrow">→</div>' : ""}
-      <div class="pipeline-stage" data-stage="${step}">
-        <span class="pipeline-num">0${i + 1}</span>
-        <span class="pipeline-name">${escapeHtml(t(STEP_LABEL_KEY[step]))}</span>
-      </div>`
+      (b) =>
+        `<span class="tag-badge ${b.type === "escalation" ? "tag-escalation" : "tag-guardrail"}">${b.type === "escalation" ? "Human handoff" : "Guardrail"} — ${escapeHtml(b.text)}</span>`
     )
     .join("");
+  div.innerHTML = `
+    <ul class="chat-trace">${scenario.trace.map((t) => `<li>${escapeHtml(t)}</li>`).join("")}</ul>
+    <p class="chat-answer">${escapeHtml(scenario.answer)}</p>
+    <div class="chat-structured">${renderStructured(scenario.structured)}</div>
+    <div class="chat-badges">${badgesHtml}</div>
+  `;
+  elCopilotChat.appendChild(div);
+  elCopilotChat.scrollTop = elCopilotChat.scrollHeight;
 }
 
-$$(".objective-chip").forEach((chip) => {
-  chip.addEventListener("click", () => applyObjective(chip.dataset.objective));
+function appendAssistantFallback(userText) {
+  const div = document.createElement("div");
+  div.className = "chat-msg-assistant";
+  div.innerHTML = `
+    <p class="chat-answer">This demo scripts four grounded scenarios rather than calling a live model. "${escapeHtml(
+      userText
+    )}" doesn't match one of them — try one of the four prompts above (shipments needing attention, today's exceptions, a missing document, or escalating a case) to see the full reasoning trace.</p>
+  `;
+  elCopilotChat.appendChild(div);
+  elCopilotChat.scrollTop = elCopilotChat.scrollHeight;
+}
+
+function matchScenario(text) {
+  const t = text.toLowerCase();
+  if (/(attention|today|need.*attention|priorit)/.test(t)) return "attention";
+  if (/(exception|summar)/.test(t)) return "exceptions";
+  if (/(document|missing|pod|bol|paperwork)/.test(t)) return "document";
+  if (/(escalate|escalat|human|person|handoff)/.test(t)) return "escalate";
+  return null;
+}
+
+function runCopilot(userText, scenarioKey) {
+  appendUserBubble(userText);
+  const key = scenarioKey || matchScenario(userText);
+  if (key && COPILOT_SCENARIOS[key]) {
+    appendAssistantScenario(COPILOT_SCENARIOS[key]);
+  } else {
+    appendAssistantFallback(userText);
+  }
+}
+
+$$(".copilot-prompt-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const key = btn.dataset.prompt;
+    runCopilot(COPILOT_SCENARIOS[key].userText, key);
+  });
 });
 
-$("#btn-example").addEventListener("click", () => {
-  elInput.value = t(`obj.${currentObjective}.placeholder`);
+$("#copilot-send").addEventListener("click", () => {
+  const input = $("#copilot-input");
+  const text = input.value.trim();
+  if (!text) return;
+  runCopilot(text);
+  input.value = "";
+});
+
+$("#copilot-input").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") $("#copilot-send").click();
 });
 
 /* ============================================================
-   Console log + pipeline stage status
+   MODULE 2 · Document Automation
    ============================================================ */
 
-const elLog = $("#console-log");
+const DOC_PRESETS = {
+  pod: {
+    label: "Proof of Delivery",
+    fields: [
+      { field: "Consignee", value: "Meridian Foods Distribution", confidence: "high" },
+      { field: "Delivery date/time", value: "2026-01-14 14:32", confidence: "high" },
+      { field: "Signature status", value: "Signed", confidence: "high" },
+      { field: "Pallet count", value: "12 / 12", confidence: "medium" },
+    ],
+    validations: [
+      { label: "Signature present", pass: true },
+      { label: "Pallet count matches load record", pass: true },
+      { label: "Delivery time within SLA window", pass: true },
+    ],
+    exception: null,
+    approval: { status: "approved", text: "Auto-approved — all fields high/medium confidence, no exceptions detected." },
+  },
+  invoice: {
+    label: "Carrier Invoice",
+    fields: [
+      { field: "Invoice #", value: "INV-88231", confidence: "high" },
+      { field: "Load #", value: "LD-48213", confidence: "high" },
+      { field: "Billed amount", value: "$1,250.00", confidence: "high" },
+      { field: "Rate confirmation amount", value: "$1,180.00", confidence: "high" },
+    ],
+    validations: [
+      { label: "Load number matches TMS record", pass: true },
+      { label: "Billed amount matches rate confirmation", pass: false, note: "$70.00 discrepancy" },
+    ],
+    exception: { label: "Billing discrepancy", detail: "Invoiced amount exceeds the rate confirmation by $70.00." },
+    approval: { status: "review", text: "Routed to AP for review — amount mismatch exceeds auto-approval tolerance." },
+  },
+  bol: {
+    label: "Bill of Lading",
+    fields: [
+      { field: "Shipper", value: "Northgate Manufacturing", confidence: "high" },
+      { field: "Consignee", value: "Meridian Foods Distribution", confidence: "high" },
+      { field: "Weight", value: "18,400 lbs", confidence: "medium" },
+      { field: "HAZMAT flag", value: "No", confidence: "high" },
+    ],
+    validations: [
+      { label: "Shipper/consignee match load record", pass: true },
+      { label: "Weight within tolerance", pass: true },
+      { label: "HAZMAT documentation not required", pass: true },
+    ],
+    exception: null,
+    approval: { status: "approved", text: "Auto-processed and logged — no exceptions found." },
+  },
+  receipt: {
+    label: "Delivery Receipt",
+    fields: [
+      { field: "Delivery confirmation", value: "Confirmed", confidence: "high" },
+      { field: "Received by", value: "J. Alvarez", confidence: "medium" },
+      { field: "Condition note", value: "1 pallet damaged", confidence: "high" },
+    ],
+    validations: [
+      { label: "Delivery confirmed by consignee", pass: true },
+      { label: "Condition matches expected (no damage)", pass: false, note: "Damage reported" },
+    ],
+    exception: { label: "Damage reported", detail: "1 pallet damaged — routed to claims for review before closing the load." },
+    approval: { status: "review", text: "Held for human review — a damage claim requires manual sign-off." },
+  },
+};
 
-function log(msg, type) {
-  const line = document.createElement("div");
-  line.className = "console-line" + (type ? ` ${type}` : "");
-  const time = new Date().toLocaleTimeString("en-US", { hour12: false });
-  line.innerHTML = `<span class="t">${time}</span>${escapeHtml(msg)}`;
-  elLog.appendChild(line);
-  elLog.scrollTop = elLog.scrollHeight;
+const DOC_STAGES = [
+  { key: "document", label: "Document" },
+  { key: "extraction", label: "Extraction (OCR/IDP)" },
+  { key: "validation", label: "Validation" },
+  { key: "structured", label: "Structured fields" },
+  { key: "exception", label: "Exception detection" },
+  { key: "approval", label: "Human approval" },
+];
+
+let currentDocType = "pod";
+let docRunning = false;
+
+function renderDocPipelineShell() {
+  const el = $("#doc-pipeline");
+  el.innerHTML = DOC_STAGES.map(
+    (s, i) => `
+    ${i > 0 ? '<span class="doc-arrow">→</span>' : ""}
+    <div class="doc-stage" data-stage="${s.key}"><span class="doc-stage-num">0${i + 1}</span>${escapeHtml(s.label)}</div>`
+  ).join("");
 }
 
-function setStage(step, status) {
-  const el = elPipeline.querySelector(`[data-stage="${step}"]`);
+function setDocStage(key, status) {
+  const el = $(`#doc-pipeline [data-stage="${key}"]`);
   if (!el) return;
-  el.classList.remove("active", "done", "error");
+  el.classList.remove("active", "done");
   if (status) el.classList.add(status);
 }
 
-async function callAgent(path, body) {
-  const res = await fetch(path, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...body, language: currentLang }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || `Error calling ${path}`);
-  return data;
+function confidenceDot(level) {
+  return `<span class="confidence-dot conf-${level}"></span>`;
 }
 
-async function runStep(step, path, body, onSuccess) {
-  setStage(step, "active");
-  log(`→ ${t(STEP_LABEL_KEY[step])}: sending request to Claude...`);
-  const start = performance.now();
-  try {
-    const data = await callAgent(path, body);
-    const elapsed = ((performance.now() - start) / 1000).toFixed(1);
-    setStage(step, "done");
-    const summary = onSuccess(data);
-    log(`✓ ${t(STEP_LABEL_KEY[step])}: ${summary} (${elapsed}s)`, "ok");
-    return data;
-  } catch (err) {
-    setStage(step, "error");
-    log(`✗ ${t(STEP_LABEL_KEY[step])}: ${err.message}`, "err");
-    throw err;
+function docCard(title, bodyHtml) {
+  return `<div class="mini-card"><h4 style="margin:0 0 10px;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.03em;color:var(--text-faint);">${escapeHtml(
+    title
+  )}</h4>${bodyHtml}</div>`;
+}
+
+async function runDocPipeline() {
+  if (docRunning) return;
+  docRunning = true;
+  $("#btn-run-doc").disabled = true;
+  const preset = DOC_PRESETS[currentDocType];
+  const content = $("#doc-content");
+  content.innerHTML = "";
+  DOC_STAGES.forEach((s) => setDocStage(s.key, null));
+
+  // Stage 1 · document
+  setDocStage("document", "active");
+  await delay(350);
+  content.insertAdjacentHTML(
+    "beforeend",
+    docCard("Document received", `<p style="margin:0;color:var(--text-muted);font-size:0.86rem;">Type: <strong style="color:var(--text);">${escapeHtml(preset.label)}</strong> · Format: scanned PDF (simulated input)</p>`)
+  );
+  setDocStage("document", "done");
+
+  // Stage 2 · extraction
+  setDocStage("extraction", "active");
+  await delay(500);
+  const fieldsHtml = `<div class="doc-fields-grid">${preset.fields
+    .map(
+      (f) =>
+        `<div><div style="font-size:0.72rem;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.03em;">${escapeHtml(f.field)}</div><div style="font-size:0.88rem;color:var(--text);margin-top:2px;">${confidenceDot(f.confidence)}${escapeHtml(f.value)} <span style="color:var(--text-faint);font-size:0.72rem;">(${f.confidence} confidence)</span></div></div>`
+    )
+    .join("")}</div>`;
+  content.insertAdjacentHTML("beforeend", docCard("Extraction (OCR / IDP)", fieldsHtml));
+  setDocStage("extraction", "done");
+
+  // Stage 3 · validation
+  setDocStage("validation", "active");
+  await delay(500);
+  const valHtml = preset.validations
+    .map(
+      (v) =>
+        `<div class="validation-row"><span class="${v.pass ? "check-ok" : "check-fail"}">${v.pass ? "✓" : "✗"}</span><span>${escapeHtml(v.label)}${v.note ? ` — <span style="color:var(--danger);">${escapeHtml(v.note)}</span>` : ""}</span></div>`
+    )
+    .join("");
+  content.insertAdjacentHTML("beforeend", docCard("Validation", valHtml));
+  setDocStage("validation", "done");
+
+  // Stage 4 · structured fields
+  setDocStage("structured", "active");
+  await delay(450);
+  const structuredHtml = `<pre style="margin:0;font-family:var(--font-mono);font-size:0.8rem;color:var(--accent-strong);white-space:pre-wrap;">${preset.fields
+    .map((f) => `${f.field}: ${f.value}`)
+    .join("\n")}</pre>`;
+  content.insertAdjacentHTML("beforeend", docCard("Structured record", structuredHtml));
+  setDocStage("structured", "done");
+
+  // Stage 5 · exception detection
+  setDocStage("exception", "active");
+  await delay(450);
+  const exceptionHtml = preset.exception
+    ? `<div class="approval-banner review"><strong>${escapeHtml(preset.exception.label)}</strong> — ${escapeHtml(preset.exception.detail)}</div>`
+    : `<div class="approval-banner approved">No exceptions detected.</div>`;
+  content.insertAdjacentHTML("beforeend", docCard("Exception detection", exceptionHtml));
+  setDocStage("exception", "done");
+
+  // Stage 6 · human approval
+  setDocStage("approval", "active");
+  await delay(450);
+  const approvalClass = preset.approval.status === "approved" ? "approved" : "review";
+  content.insertAdjacentHTML(
+    "beforeend",
+    docCard("Human approval", `<div class="approval-banner ${approvalClass}">${escapeHtml(preset.approval.text)}</div>`)
+  );
+  setDocStage("approval", "done");
+
+  docRunning = false;
+  $("#btn-run-doc").disabled = false;
+}
+
+$$(".doc-type-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    if (docRunning) return;
+    currentDocType = btn.dataset.doctype;
+    $$(".doc-type-btn").forEach((b) => b.classList.toggle("active", b === btn));
+    $("#doc-content").innerHTML = "";
+    DOC_STAGES.forEach((s) => setDocStage(s.key, null));
+  });
+});
+
+$("#btn-run-doc").addEventListener("click", runDocPipeline);
+
+renderDocPipelineShell();
+
+/* ============================================================
+   MODULE 3 · RPA / Power Automate Workflow
+   ============================================================ */
+
+const RPA_NODES = {
+  receive: {
+    label: "Receive document",
+    rule: "Trigger: a new file lands in the intake folder / inbox connector.",
+    retry: "Not applicable — this step only detects arrival.",
+    exception: "If the file type is unsupported, the flow stops and notifies the automation owner.",
+  },
+  validate: {
+    label: "Validate",
+    rule: "Deterministic rule: required fields present, file type matches expected, load number found in the TMS.",
+    retry: "1 retry after 5 seconds if the TMS lookup times out.",
+    exception: "If validation fails twice, the record is queued for manual review instead of blocking the flow.",
+  },
+  update: {
+    label: "Update system",
+    rule: "Writes the validated record to the target system (TMS/ERP) via API.",
+    retry: "3 retries with exponential backoff (5s, 15s, 45s), then escalates to on-call.",
+    exception: "On repeated failure, the flow logs the error and opens an incident instead of retrying indefinitely.",
+  },
+  notify: {
+    label: "Notify user",
+    rule: "Sends a notification (email/Teams) to the process owner once the record is updated.",
+    retry: "1 retry if the notification channel is temporarily unavailable.",
+    exception: "If notification fails entirely, the flow still completes — a notification failure never blocks the update.",
+  },
+  log: {
+    label: "Log result",
+    rule: "Writes a structured audit trail entry for every run, success or failure.",
+    retry: "Not applicable — logging always executes, including on failure paths.",
+    exception: "Not applicable — this step is itself the exception/audit record.",
+  },
+};
+
+const RPA_ORDER = ["receive", "validate", "update", "notify", "log"];
+
+function renderRpaDetail(key) {
+  const node = RPA_NODES[key];
+  $("#rpa-detail").innerHTML = `
+    <dt>Rule</dt><dd>${escapeHtml(node.rule)}</dd>
+    <dt>Retry logic</dt><dd>${escapeHtml(node.retry)}</dd>
+    <dt>Exception handling</dt><dd>${escapeHtml(node.exception)}</dd>
+  `;
+}
+
+function selectRpaNode(key) {
+  $$(".rpa-node").forEach((n) => n.classList.toggle("selected", n.dataset.node === key));
+  renderRpaDetail(key);
+}
+
+$$(".rpa-node").forEach((node) => {
+  node.addEventListener("click", () => selectRpaNode(node.dataset.node));
+});
+
+function rpaTimestamp() {
+  return new Date().toLocaleTimeString("en-US", { hour12: false });
+}
+
+function appendRpaLog(text, cls) {
+  const log = $("#rpa-log");
+  const line = document.createElement("div");
+  line.className = "log-line" + (cls ? ` ${cls}` : "");
+  line.textContent = `[${rpaTimestamp()}] ${text}`;
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+}
+
+function setNodeState(key, state) {
+  const el = $(`.rpa-node[data-node="${key}"]`);
+  el.classList.remove("state-active", "state-success", "state-fail", "state-retry");
+  const statusEl = el.querySelector(".rpa-node-status");
+  if (state === "active") {
+    el.classList.add("state-active");
+    statusEl.textContent = "running";
+  } else if (state === "success") {
+    el.classList.add("state-success");
+    statusEl.textContent = "success";
+  } else if (state === "fail") {
+    el.classList.add("state-fail");
+    statusEl.textContent = "failed";
+  } else if (state === "retry") {
+    el.classList.add("state-retry");
+    statusEl.textContent = "retrying";
+  } else {
+    statusEl.textContent = "";
   }
 }
 
-/* ============================================================
-   Rendering: Audit
-   ============================================================ */
+let rpaRunning = false;
 
-const INTERVENTION_LABEL = {
-  rpa_bot: "RPA Bot",
-  conversational_bot: "Conversational Bot",
-  workday_automation: "Workday Automation",
-  system_integration: "System Integration",
-  document_processing: "Document Processing",
-  dashboard: "Dashboard",
-  keep_human: "Keep Human",
-};
+async function runRpaSimulation() {
+  if (rpaRunning) return;
+  rpaRunning = true;
+  $("#btn-run-rpa").disabled = true;
+  $("#rpa-log").innerHTML = "";
+  RPA_ORDER.forEach((k) => setNodeState(k, null));
 
-function renderAudit(audit) {
-  const panel = $("#panel-audit");
-  panel.querySelector('[data-field="current_process"]').textContent = audit.current_process;
-  fillList(panel.querySelector('[data-field="bottlenecks"]'), audit.bottlenecks);
-  fillList(panel.querySelector('[data-field="repetitive_work"]'), audit.repetitive_work);
-  fillList(panel.querySelector('[data-field="systems_involved"]'), audit.systems_involved);
-  fillList(panel.querySelector('[data-field="human_decision_points"]'), audit.human_decision_points);
-  fillList(panel.querySelector('[data-field="potential_risks"]'), audit.potential_risks);
+  for (const key of RPA_ORDER) {
+    const node = RPA_NODES[key];
+    setNodeState(key, "active");
+    appendRpaLog(`Node: ${node.label} | Status: RUNNING`);
+    await delay(500);
 
-  const list = panel.querySelector('[data-field="opportunities"]');
-  list.innerHTML = audit.opportunities
-    .map(
-      (o) => `
-      <div class="opportunity-item">
-        <span class="opportunity-text">${escapeHtml(o.opportunity)}<span class="opportunity-rationale">${escapeHtml(o.rationale)}</span></span>
-        <span class="badge badge-${o.automation_potential}">${o.automation_potential} potential</span>
-        <span class="badge badge-intervention">${INTERVENTION_LABEL[o.recommended_intervention] || o.recommended_intervention}</span>
-      </div>`
-    )
-    .join("");
-
-  panel.hidden = false;
-}
-
-/* ============================================================
-   Rendering: Prioritization
-   ============================================================ */
-
-const PRIORITY_LABEL_KEY = {
-  quick_win: "panel.prioritize.quickWin",
-  strategic: "panel.prioritize.strategic",
-  experiment: "panel.prioritize.experiment",
-  low_priority: "panel.prioritize.lowPriority",
-};
-
-function renderPrioritization(payload) {
-  const panel = $("#panel-prioritize");
-  panel.querySelector('[data-field="data_note"]').textContent = payload.data_note;
-
-  $$(".quadrant-items").forEach((el) => (el.innerHTML = ""));
-  payload.matrix.forEach((row) => {
-    const cell = panel.querySelector(`.quadrant-cell[data-quadrant="${row.recommended_priority}"] .quadrant-items`);
-    if (cell) {
-      const chip = document.createElement("span");
-      chip.className = "quadrant-chip";
-      chip.textContent = row.opportunity;
-      cell.appendChild(chip);
+    if (key === "update") {
+      setNodeState(key, "fail");
+      appendRpaLog(`Node: ${node.label} | Status: FAILED | Reason: TMS API timeout`, "log-fail");
+      await delay(500);
+      setNodeState(key, "retry");
+      appendRpaLog(`Node: ${node.label} | Retry 1/3 (backoff 5s, simulated)`, "log-retry");
+      await delay(700);
     }
-  });
 
-  const tbody = panel.querySelector('[data-field="matrix-rows"]');
-  tbody.innerHTML = payload.matrix
-    .map(
-      (row) => `
-      <tr>
-        <td>${escapeHtml(row.opportunity)}</td>
-        <td><span class="badge badge-${row.business_impact}">${row.business_impact}</span></td>
-        <td><span class="badge badge-${row.implementation_effort}">${row.implementation_effort}</span></td>
-        <td>${escapeHtml(row.frequency)}</td>
-        <td><span class="badge badge-${row.risk}">${row.risk}</span></td>
-        <td><strong>${escapeHtml(t(PRIORITY_LABEL_KEY[row.recommended_priority]) || row.recommended_priority)}</strong></td>
-      </tr>`
-    )
-    .join("");
+    setNodeState(key, "success");
+    appendRpaLog(`Node: ${node.label} | Status: SUCCESS`);
+    await delay(300);
+  }
 
-  panel.hidden = false;
+  appendRpaLog("Run complete — audit trail written for all 5 nodes.");
+  rpaRunning = false;
+  $("#btn-run-rpa").disabled = false;
 }
 
-/* ============================================================
-   Rendering: Conversational bot blueprint
-   ============================================================ */
+$("#btn-run-rpa").addEventListener("click", runRpaSimulation);
 
-function renderBotBlueprint(blueprint) {
-  const panel = $("#panel-bot");
-  panel.querySelector('[data-field="channel"]').textContent = blueprint.channel;
-  panel.querySelector('[data-field="problem"]').textContent = blueprint.problem;
-  panel.querySelector('[data-field="sample_user_message"]').textContent = blueprint.sample_user_message;
-  panel.querySelector('[data-field="sample_bot_reply"]').textContent = blueprint.sample_bot_reply;
-  fillList(panel.querySelector('[data-field="intents"]'), blueprint.intents);
-  fillList(panel.querySelector('[data-field="data_sources"]'), blueprint.data_sources);
-  panel.querySelector('[data-field="claude_role"]').textContent = blueprint.claude_role;
-  panel.querySelector('[data-field="escalation_rule"]').textContent = blueprint.escalation_rule;
-  fillList(panel.querySelector('[data-field="guardrails"]'), blueprint.guardrails);
-  fillList(panel.querySelector('[data-field="success_metrics"]'), blueprint.success_metrics);
-  fillList(panel.querySelector('[data-field="implementation_steps"]'), blueprint.implementation_steps);
-  panel.hidden = false;
-}
-
-/* ============================================================
-   Rendering: Integration blueprint
-   ============================================================ */
-
-function renderIntegrationBlueprint(blueprint) {
-  const panel = $("#panel-integration");
-  panel.querySelector('[data-field="pattern"]').textContent = blueprint.pattern;
-  panel.querySelector('[data-field="problem"]').textContent = blueprint.problem;
-  fillList(panel.querySelector('[data-field="systems_involved"]'), blueprint.systems_involved);
-  panel.querySelector('[data-field="trigger"]').textContent = blueprint.trigger;
-  fillList(panel.querySelector('[data-field="data_flow_steps"]'), blueprint.data_flow_steps);
-  panel.querySelector('[data-field="integration_method"]').textContent = blueprint.integration_method;
-  panel.querySelector('[data-field="error_handling"]').textContent = blueprint.error_handling;
-  panel.querySelector('[data-field="owner_and_approval"]').textContent = blueprint.owner_and_approval;
-  fillList(panel.querySelector('[data-field="success_metrics"]'), blueprint.success_metrics);
-  fillList(panel.querySelector('[data-field="risks"]'), blueprint.risks);
-  fillList(panel.querySelector('[data-field="implementation_steps"]'), blueprint.implementation_steps);
-  panel.hidden = false;
-}
-
-/* ============================================================
-   Rendering: Document processor (IDP)
-   ============================================================ */
-
-function renderDocumentResult(result) {
-  const panel = $("#panel-document");
-  panel.querySelector('[data-field="document_type"]').textContent = result.document_type;
-
-  const tbody = panel.querySelector('[data-field="extracted_fields"]');
-  tbody.innerHTML = result.extracted_fields
-    .map(
-      (f) => `
-      <tr>
-        <td>${escapeHtml(f.field)}</td>
-        <td>${escapeHtml(f.value)}</td>
-        <td><span class="badge badge-${f.confidence}">${f.confidence}</span></td>
-      </tr>`
-    )
-    .join("");
-
-  fillList(panel.querySelector('[data-field="flagged_for_review"]'), result.flagged_for_review);
-  panel.querySelector('[data-field="downstream_action"]').textContent = result.downstream_action;
-  panel.querySelector('[data-field="target_system"]').textContent = result.target_system;
-  panel.querySelector('[data-field="automation_note"]').textContent = result.automation_note;
-  panel.hidden = false;
-}
-
-/* ============================================================
-   Rendering: KPI dashboard
-   ============================================================ */
-
-const DIRECTION_ARROW = { up: "▲", down: "▼", stable: "→" };
-
-function renderDashboardBlueprint(blueprint) {
-  const panel = $("#panel-dashboard");
-  panel.querySelector('[data-field="dashboard_title"]').textContent = blueprint.dashboard_title;
-  panel.querySelector('[data-field="audience"]').textContent = blueprint.audience;
-
-  const kpiGrid = panel.querySelector('[data-field="kpis"]');
-  kpiGrid.innerHTML = blueprint.kpis
-    .map(
-      (k) => `
-      <div class="kpi-card">
-        <div class="kpi-name"><span class="kpi-direction">${DIRECTION_ARROW[k.target_direction] || ""}</span>${escapeHtml(k.name)}</div>
-        <p class="kpi-formula">${escapeHtml(k.formula)}</p>
-      </div>`
-    )
-    .join("");
-
-  fillList(panel.querySelector('[data-field="data_sources"]'), blueprint.data_sources);
-  panel.querySelector('[data-field="refresh_cadence"]').textContent = blueprint.refresh_cadence;
-
-  const layoutList = panel.querySelector('[data-field="chart_layout"]');
-  layoutList.innerHTML = blueprint.chart_layout
-    .map((item) => `<div class="chart-layout-item">${escapeHtml(item)}</div>`)
-    .join("");
-
-  panel.querySelector('[data-field="alert_condition"]').textContent = "⚠ " + blueprint.alert_condition;
-  panel.hidden = false;
-}
-
-/* ============================================================
-   Rendering: Automation documentation
-   ============================================================ */
-
-let lastDocsMarkdown = "";
-
-function renderDocsBrief(brief) {
-  const panel = $("#panel-docs");
-  Object.keys(brief).forEach((key) => {
-    const el = panel.querySelector(`[data-brief-panel="${key}"]`);
-    if (el) el.textContent = brief[key];
-  });
-
-  lastDocsMarkdown = `# Automation Documentation
-
-## Executive Summary
-${brief.executive_summary}
-
-## Technical Approach
-${brief.technical_approach}
-
-## Monitoring & Troubleshooting
-${brief.monitoring_and_troubleshooting}
-
-## Adoption Plan
-${brief.adoption_plan}
-
-## Metrics
-${brief.metrics}
-`;
-
-  panel.hidden = false;
-}
-
-$$("#brief-tabs .tab-btn").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    $$("#brief-tabs .tab-btn").forEach((b) => b.classList.toggle("active", b === btn));
-    $$(".brief-panel").forEach((p) => p.classList.toggle("active", p.dataset.briefPanel === btn.dataset.briefTab));
-  });
+$("#btn-reset-rpa").addEventListener("click", () => {
+  if (rpaRunning) return;
+  RPA_ORDER.forEach((k) => setNodeState(k, null));
+  $("#rpa-log").innerHTML = "";
 });
 
-$("#btn-download-docs").addEventListener("click", () => {
-  const blob = new Blob([lastDocsMarkdown], { type: "text/markdown" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "automation-documentation.md";
-  a.click();
-  URL.revokeObjectURL(url);
-});
+selectRpaNode("receive");
 
 /* ============================================================
-   Orchestration
+   MODULE 4 · Enterprise Integration Map
    ============================================================ */
 
-function resetResults() {
-  elError.hidden = true;
-  elLog.innerHTML = "";
-  ["audit", "prioritize", "bot", "integration", "document", "dashboard", "docs"].forEach((name) => {
-    $(`#panel-${name}`).hidden = true;
+const INTEGRATION_LAYERS = [
+  { label: "AI & Automation Layer", systems: ["claude", "power-automate"] },
+  { label: "Integration Layer", systems: ["rest-api", "sql"] },
+  { label: "Business Systems", systems: ["hubspot", "tms", "erp", "workday"] },
+  { label: "Analytics Layer", systems: ["powerbi"] },
+];
+
+const INTEGRATION_SYSTEMS = {
+  claude: {
+    name: "Claude",
+    input: "Unstructured messages, documents, and exception data.",
+    action: "Classifies, extracts, and reasons over context within defined guardrails.",
+    output: "Structured decisions, extracted fields, or a drafted response for human review.",
+  },
+  "power-automate": {
+    name: "Power Automate / RPA",
+    tag: "lab",
+    input: "A triggering event — new file, status change, scheduled run.",
+    action: "Executes a deterministic, rule-based workflow (see the RPA Workflow module).",
+    output: "An updated system record plus an audit log entry.",
+  },
+  "rest-api": {
+    name: "REST API",
+    input: "A request from a bot, workflow, or another system.",
+    action: "Authenticates the caller and routes the request to the right service.",
+    output: "A structured JSON response.",
+  },
+  sql: {
+    name: "SQL / PostgreSQL",
+    input: "Structured data produced by extraction or automation steps.",
+    action: "Stores, queries, and joins operational data.",
+    output: "A queryable dataset that feeds reporting.",
+  },
+  hubspot: {
+    name: "CRM — HubSpot",
+    input: "A customer interaction, inquiry, or support ticket.",
+    action: "Logs the interaction and updates the contact or deal record.",
+    output: "An updated customer timeline visible to the team.",
+  },
+  tms: {
+    name: "TMS",
+    input: "A load tender or a shipment status update.",
+    action: "Creates or updates the shipment record.",
+    output: "A live shipment status feed other systems can read.",
+  },
+  erp: {
+    name: "ERP",
+    input: "An invoice or purchase order.",
+    action: "Matches it against the expected record (PO, rate confirmation).",
+    output: "An approved transaction, or a flagged exception for AP review.",
+  },
+  workday: {
+    name: "Workday",
+    tag: "concept",
+    input: "(Concept) An HR event, such as a new hire or role change.",
+    action: "(Concept) Would trigger a business process to sync the record downstream.",
+    output: "(Concept) A synced profile in connected systems.",
+  },
+  powerbi: {
+    name: "Power BI",
+    input: "Aggregated logs and KPIs from the automations above.",
+    action: "Visualizes trends, thresholds, and exceptions.",
+    output: "The performance dashboard (see the Performance Dashboard module).",
+  },
+};
+
+function renderIntegrationLayers() {
+  const el = $("#integration-layers");
+  el.innerHTML = INTEGRATION_LAYERS.map(
+    (layer) => `
+    <div class="integration-layer">
+      <p class="integration-layer-label">${escapeHtml(layer.label)}</p>
+      <div class="integration-grid">
+        ${layer.systems
+          .map((key) => {
+            const sys = INTEGRATION_SYSTEMS[key];
+            const sub = sys.tag === "concept" ? "Concept / target system" : sys.tag === "lab" ? "Hands-on lab" : "";
+            return `<button class="integration-node${sys.tag === "concept" ? " concept" : ""}" data-system="${key}" type="button">${escapeHtml(
+              sys.name
+            )}${sub ? `<span class="node-sub">${escapeHtml(sub)}</span>` : ""}</button>`;
+          })
+          .join("")}
+      </div>
+    </div>`
+  ).join("");
+
+  $$(".integration-node").forEach((node) => {
+    node.addEventListener("click", () => selectIntegrationSystem(node.dataset.system));
   });
 }
 
-elBtnRun.addEventListener("click", runAssistant);
+function selectIntegrationSystem(key) {
+  $$(".integration-node").forEach((n) => n.classList.toggle("selected", n.dataset.system === key));
+  const sys = INTEGRATION_SYSTEMS[key];
+  const tagHtml =
+    sys.tag === "concept"
+      ? '<span class="tag-badge tag-concept">Integration architecture concept / target system</span>'
+      : sys.tag === "lab"
+      ? '<span class="tag-badge tag-lab">Hands-on lab</span>'
+      : "";
+  $("#integration-detail").innerHTML = `
+    <p class="integration-detail-title">${escapeHtml(sys.name)} ${tagHtml}</p>
+    <div class="integration-flow-grid">
+      <div><h4>Input</h4><p>${escapeHtml(sys.input)}</p></div>
+      <div><h4>Action</h4><p>${escapeHtml(sys.action)}</p></div>
+      <div><h4>Output</h4><p>${escapeHtml(sys.output)}</p></div>
+    </div>
+  `;
+}
 
-async function runAssistant() {
-  const input = elInput.value.trim();
-  const minLen = 20;
-  resetResults();
-  $$(".pipeline-stage").forEach((el) => el.classList.remove("active", "done", "error"));
+renderIntegrationLayers();
 
-  if (input.length < minLen) {
-    elError.textContent =
-      currentLang === "es"
-        ? `Escribe al menos ${minLen} caracteres.`
-        : `Please write at least ${minLen} characters.`;
-    elError.hidden = false;
+/* ============================================================
+   MODULE 5 · Automation Performance Dashboard
+   ============================================================ */
+
+const DASHBOARD_DATA = [
+  { workflow: "copilot", department: "dispatch", tasksRemoved: 180, successRate: 92, exceptionsPct: 9, avgTimeMin: 1.1, hoursSaved: 28, resolutionRate: 85 },
+  { workflow: "copilot", department: "customer-service", tasksRemoved: 310, successRate: 89, exceptionsPct: 12, avgTimeMin: 0.9, hoursSaved: 45, resolutionRate: 78 },
+  { workflow: "copilot", department: "ap-finance", tasksRemoved: 40, successRate: 90, exceptionsPct: 8, avgTimeMin: 1.4, hoursSaved: 6, resolutionRate: 80 },
+  { workflow: "copilot", department: "compliance", tasksRemoved: 25, successRate: 95, exceptionsPct: 4, avgTimeMin: 1.6, hoursSaved: 5, resolutionRate: 90 },
+  { workflow: "document", department: "dispatch", tasksRemoved: 150, successRate: 93, exceptionsPct: 7, avgTimeMin: 2.8, hoursSaved: 22, resolutionRate: 87 },
+  { workflow: "document", department: "customer-service", tasksRemoved: 95, successRate: 91, exceptionsPct: 10, avgTimeMin: 3.1, hoursSaved: 14, resolutionRate: 88 },
+  { workflow: "document", department: "ap-finance", tasksRemoved: 420, successRate: 94, exceptionsPct: 15, avgTimeMin: 3.4, hoursSaved: 62, resolutionRate: 81 },
+  { workflow: "document", department: "compliance", tasksRemoved: 60, successRate: 97, exceptionsPct: 3, avgTimeMin: 2.6, hoursSaved: 9, resolutionRate: 93 },
+  { workflow: "rpa", department: "dispatch", tasksRemoved: 310, successRate: 96, exceptionsPct: 4, avgTimeMin: 0.6, hoursSaved: 48, resolutionRate: 95 },
+  { workflow: "rpa", department: "customer-service", tasksRemoved: 70, successRate: 95, exceptionsPct: 3, avgTimeMin: 0.5, hoursSaved: 11, resolutionRate: 94 },
+  { workflow: "rpa", department: "ap-finance", tasksRemoved: 180, successRate: 97, exceptionsPct: 5, avgTimeMin: 0.7, hoursSaved: 27, resolutionRate: 96 },
+  { workflow: "rpa", department: "compliance", tasksRemoved: 50, successRate: 98, exceptionsPct: 2, avgTimeMin: 0.8, hoursSaved: 8, resolutionRate: 97 },
+];
+
+function average(nums) {
+  return nums.reduce((a, b) => a + b, 0) / nums.length;
+}
+
+function computeAggregate(workflow, department) {
+  const rows = DASHBOARD_DATA.filter(
+    (r) => (workflow === "all" || r.workflow === workflow) && (department === "all" || r.department === department)
+  );
+  if (rows.length === 0) return null;
+  return {
+    tasksRemoved: rows.reduce((sum, r) => sum + r.tasksRemoved, 0),
+    successRate: average(rows.map((r) => r.successRate)),
+    exceptionsPct: average(rows.map((r) => r.exceptionsPct)),
+    avgTimeMin: average(rows.map((r) => r.avgTimeMin)),
+    hoursSaved: rows.reduce((sum, r) => sum + r.hoursSaved, 0),
+    resolutionRate: average(rows.map((r) => r.resolutionRate)),
+  };
+}
+
+function meterCard(label, value, sub, meterClass) {
+  return `
+    <div class="kpi-stat-card">
+      <p class="kpi-stat-label">${escapeHtml(label)}</p>
+      <p class="kpi-stat-value">${value}</p>
+      ${sub ? `<p class="kpi-stat-sub">${sub}</p>` : ""}
+      ${meterClass !== undefined ? `<div class="kpi-meter-track"><div class="kpi-meter-fill ${meterClass.cls}" style="width:${meterClass.pct}%"></div></div>` : ""}
+    </div>`;
+}
+
+function renderDashboard() {
+  const workflow = $("#filter-workflow").value;
+  const department = $("#filter-department").value;
+  const agg = computeAggregate(workflow, department);
+  const grid = $("#kpi-grid");
+  if (!agg) {
+    grid.innerHTML = "";
     return;
   }
 
-  elBtnRun.disabled = true;
-  log(currentLang === "es" ? "Iniciando el asistente..." : "Starting the assistant...");
-
-  try {
-    switch (currentObjective) {
-      case "audit": {
-        await runStep("auditor", "/api/audit", { process: input }, (data) => {
-          renderAudit(data.audit);
-          return `${data.audit.opportunities.length} opportunities identified`;
-        });
-        break;
-      }
-
-      case "opportunities": {
-        const { audit } = await runStep("auditor", "/api/audit", { process: input }, (data) => {
-          renderAudit(data.audit);
-          return `${data.audit.opportunities.length} opportunities identified`;
-        });
-        await runStep(
-          "prioritizer",
-          "/api/prioritize",
-          { opportunities: audit.opportunities },
-          (data) => {
-            renderPrioritization(data);
-            return `${data.matrix.length} opportunities scored`;
-          }
-        );
-        break;
-      }
-
-      case "bot": {
-        await runStep("botDesigner", "/api/design-bot", { opportunity: input }, (data) => {
-          renderBotBlueprint(data.blueprint);
-          return `channel: ${data.blueprint.channel}`;
-        });
-        break;
-      }
-
-      case "integration": {
-        await runStep("integrationArchitect", "/api/integration-blueprint", { opportunity: input }, (data) => {
-          renderIntegrationBlueprint(data.blueprint);
-          return `pattern: ${data.blueprint.pattern}`;
-        });
-        break;
-      }
-
-      case "document": {
-        await runStep("documentProcessor", "/api/document-processor", { description: input }, (data) => {
-          renderDocumentResult(data.result);
-          return `${data.result.extracted_fields.length} fields extracted`;
-        });
-        break;
-      }
-
-      case "dashboard": {
-        await runStep("dashboardDesigner", "/api/dashboard-designer", { process: input }, (data) => {
-          renderDashboardBlueprint(data.blueprint);
-          return `${data.blueprint.kpis.length} KPIs defined`;
-        });
-        break;
-      }
-
-      case "docs": {
-        await runStep("documenter", "/api/document-solution", { description: input }, (data) => {
-          renderDocsBrief(data.brief);
-          return "automation documentation generated";
-        });
-        break;
-      }
-    }
-
-    log(currentLang === "es" ? "Listo." : "Done.", "ok");
-  } catch (err) {
-    elError.textContent = err.message || (currentLang === "es" ? "Algo falló." : "Something failed.");
-    elError.hidden = false;
-  } finally {
-    elBtnRun.disabled = false;
-  }
+  grid.innerHTML = [
+    meterCard("Manual tasks removed", agg.tasksRemoved.toLocaleString("en-US") + " / mo", "Tasks no longer done by hand each month"),
+    meterCard(
+      "Automation success rate",
+      agg.successRate.toFixed(0) + "%",
+      "Completed without error or human override",
+      { cls: agg.successRate >= 90 ? "good" : "warn", pct: agg.successRate }
+    ),
+    meterCard(
+      "Exceptions requiring review",
+      agg.exceptionsPct.toFixed(0) + "%",
+      "Of volume routed to a human",
+      { cls: agg.exceptionsPct <= 6 ? "good" : "warn", pct: agg.exceptionsPct }
+    ),
+    meterCard("Avg. processing time", agg.avgTimeMin.toFixed(1) + " min", "vs. ~18 min manual baseline (synthetic)"),
+    meterCard("Hours saved", agg.hoursSaved.toLocaleString("en-US") + " hrs/mo", "Estimated team time returned monthly"),
+    meterCard(
+      "Bot resolution rate",
+      agg.resolutionRate.toFixed(0) + "%",
+      "Resolved without escalation to a human",
+      { cls: agg.resolutionRate >= 85 ? "good" : "warn", pct: agg.resolutionRate }
+    ),
+  ].join("");
 }
 
-/* ============================================================
-   Init
-   ============================================================ */
+$("#filter-workflow").addEventListener("change", renderDashboard);
+$("#filter-department").addEventListener("change", renderDashboard);
 
-setLang(currentLang);
+renderDashboard();
