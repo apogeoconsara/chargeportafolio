@@ -241,6 +241,12 @@
   gap: 16px;
 }
 
+.copilot-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-faint);
+}
+
 .copilot-prompts {
   display: flex;
   flex-wrap: wrap;
@@ -248,21 +254,34 @@
 }
 
 .copilot-prompt-btn {
-  border: 1px solid var(--border);
-  background: var(--panel-2);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(76, 139, 245, 0.35);
+  background: var(--accent-soft);
   border-radius: 999px;
-  padding: 8px 15px;
-  font-size: 0.82rem;
-  font-weight: 500;
-  color: var(--text-muted);
+  padding: 9px 16px 9px 14px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--accent-strong);
   cursor: pointer;
   font-family: inherit;
-  transition: border-color 0.15s ease, color 0.15s ease;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+}
+
+.copilot-prompt-btn::before {
+  content: "▶";
+  font-size: 0.62rem;
+  color: var(--accent);
 }
 
 .copilot-prompt-btn:hover {
   border-color: var(--accent);
-  color: var(--accent-strong);
+  background: rgba(76, 139, 245, 0.22);
+}
+
+.copilot-prompt-btn:active {
+  transform: translateY(1px);
 }
 
 .copilot-chat {
