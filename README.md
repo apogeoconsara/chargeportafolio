@@ -2,8 +2,27 @@
 
 Built for the **Digital Transformation & Automation Specialist** role at **Charger Logistics**. One project,
 one page: a single assistant with seven selectable goals, each mapped directly to a responsibility from the
-job posting — chatbots, Claude/LLM-powered workflows, Workday/ERP/CRM/TMS/SAP integrations, OCR/IDP document
-processing, and KPI dashboards. EN by default, ES available via the toggle in the header.
+job posting — chatbots (Claude, transferable to Dialogflow/Microsoft Bot Framework/Rasa), RPA workflows
+(the trigger/validate/act pattern shared by UiPath/Automation Anywhere/Power Automate), Workday/ERP/CRM/TMS/SAP
+integrations via REST/SOAP and SQL, OCR/IDP document processing, and KPI dashboards. EN by default, ES
+available via the toggle in the header.
+
+Cross-reference: [`portafolioaisiemens`](https://github.com/apogeoconsara/portafolioaisiemens) (live at
+https://siemensaiportafolio.netlify.app) is a separate, deeper demo of the SAP FI/CO data-model side —
+cost-center master data, governance checks, and a real in-browser SQL engine — linked from this page's
+contact section as supporting evidence for the SAP/ERP requirement.
+
+## Live vs. simulated
+
+The console has seven tabs. Tab 01 (**Live AI Console**) makes **real calls to the Anthropic API** through the
+Netlify Functions in `netlify/functions/` — pick a goal, describe a situation, and Claude generates the result
+live. Requires `ANTHROPIC_API_KEY` in the Netlify environment; without it the function returns an explicit
+error rather than faking a response.
+
+Tabs 02–07 (Operations Copilot, Document Automation, RPA Workflow, Integration Map, Performance Dashboard,
+Build vs Buy) are **deterministic client-side simulations** with synthetic logistics data — they illustrate
+the mechanics (an RPA retry, an OCR confidence threshold, an integration topology) without an API call, and
+the RPA one is deliberately rule-based because that workflow shouldn't need an LLM at all.
 
 ## The assistant (`index.html`)
 

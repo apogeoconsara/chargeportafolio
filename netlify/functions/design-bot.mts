@@ -50,7 +50,11 @@ systems or volumes not implied by it.
 Always include a clear escalation_rule to a human for anything involving
 safety, HAZMAT compliance, pricing exceptions, or a frustrated/high-value
 customer — a bot with no escalation path is not an acceptable design for
-this domain.${languageInstruction(language)}`,
+this domain. The blueprint should read as platform-agnostic: the same
+intents/guardrails/escalation design could be implemented with Claude,
+Dialogflow, Microsoft Bot Framework, or Rasa — name Claude as the
+reasoning layer in claude_role but do not claim the others were
+used.${languageInstruction(language)}`,
       user: `Use case described by the user:
 """
 ${JSON.stringify(opportunity)}

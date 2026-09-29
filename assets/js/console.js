@@ -30,6 +30,208 @@ tabButtons.forEach((btn) => {
 });
 
 /* ============================================================
+   MODULE 0 · Live AI Console — real calls to the Netlify Functions
+   in netlify/functions/, each of which calls the Anthropic API.
+   ============================================================ */
+
+async function postJSON(path, body) {
+  const res = await fetch(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error || `Request to ${path} failed (${res.status})`);
+  }
+  return data;
+}
+
+const AI_GOALS = {
+  audit: {
+    label: "Describe the workflow",
+    placeholder:
+      "Each morning, dispatch manually checks three systems to see which loads are missing a signed rate confirmation before they can be released.",
+    steps: ["Send to Claude", "Process Auditor"],
+    run: async (text) => {
+      const res = await postJSON("/api/audit", { process: text, language: "en" });
+      return res.audit;
+    },
+  },
+  opportunities: {
+    label: "Describe the workflow",
+    placeholder:
+      "Customer service manually checks shipment status across the TMS and email threads before replying to a customer's 'where is my load' request.",
+    steps: ["Send to Claude", "Process Auditor", "Prioritizer"],
+    run: async (text) => {
+      const auditRes = await postJSON("/api/audit", { process: text, language: "en" });
+      const opportunities = auditRes.audit.opportunities || [];
+      const prio = await postJSON("/api/prioritize", { opportunities, language: "en" });
+      return { audit: auditRes.audit, prioritization: prio };
+    },
+  },
+  bot: {
+    label: "Describe the use case",
+    placeholder: "Drivers text dispatch to ask when their next load is assigned and whether a detention claim was approved.",
+    steps: ["Send to Claude", "Bot Designer"],
+    run: async (text) => {
+      const res = await postJSON("/api/design-bot", { opportunity: text, language: "en" });
+      return res.blueprint;
+    },
+  },
+  integration: {
+    label: "Describe the integration/automation need",
+    placeholder:
+      "When a driver is hired in Workday, dispatch needs their profile created in the TMS and a HubSpot record for their assigned carrier updated automatically.",
+    steps: ["Send to Claude", "Integration Architect"],
+    run: async (text) => {
+      const res = await postJSON("/api/integration-blueprint", { opportunity: text, language: "en" });
+      return res.blueprint;
+    },
+  },
+  document: {
+    label: "Describe the document",
+    placeholder: "A scanned Proof of Delivery with the consignee's signature, delivery date, and a handwritten note about one damaged pallet.",
+    steps: ["Send to Claude", "Document Processor (IDP)"],
+    run: async (text) => {
+      const res = await postJSON("/api/document-processor", { description: text, language: "en" });
+      return res.result;
+    },
+  },
+  dashboard: {
+    label: "Describe the automation to monitor",
+    placeholder: "A bot that auto-matches carrier invoices against rate confirmations and flags mismatches for AP review.",
+    steps: ["Send to Claude", "Dashboard Designer"],
+    run: async (text) => {
+      const res = await postJSON("/api/dashboard-designer", { process: text, language: "en" });
+      return res.blueprint;
+    },
+  },
+  documentation: {
+    label: "Describe the automation already decided",
+    placeholder: "A Claude-powered bot that classifies inbound carrier emails, drafts a reply, and escalates HAZMAT or pricing questions to a human.",
+    steps: ["Send to Claude", "Documenter"],
+    run: async (text) => {
+      const res = await postJSON("/api/document-solution", { description: text, language: "en" });
+      return res.brief;
+    },
+  },
+};
+
+let currentAiGoal = "audit";
+
+function humanizeKey(key) {
+  return key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function renderAiValue(value) {
+  if (value === null || value === undefined || value === "") return "";
+  if (Array.isArray(value)) {
+    if (value.length === 0) return "";
+    if (typeof value[0] === "object") {
+      return value.map((item) => `<div class="mini-card" style="margin-bottom:6px;">${renderAiObjectFields(item)}</div>`).join("");
+    }
+    return `<ul>${value.map((v) => `<li>${escapeHtml(v)}</li>`).join("")}</ul>`;
+  }
+  if (typeof value === "object") return renderAiObjectFields(value);
+  return `<p>${escapeHtml(value)}</p>`;
+}
+
+function renderAiObjectFields(obj) {
+  return Object.entries(obj)
+    .filter(([, v]) => v !== undefined && v !== null && v !== "")
+    .map(([k, v]) => `<h4>${escapeHtml(humanizeKey(k))}</h4>${renderAiValue(v)}`)
+    .join("");
+}
+
+function renderAiResult(data) {
+  const el = $("#ai-result");
+  if (!data || typeof data !== "object") {
+    el.innerHTML = "";
+    return;
+  }
+  const entries = Object.entries(data).filter(([, v]) => v !== undefined && v !== null && v !== "");
+  el.innerHTML = `<div class="ai-blueprint-grid">${entries
+    .map(([k, v]) => `<div><h4>${escapeHtml(humanizeKey(k))}</h4>${renderAiValue(v)}</div>`)
+    .join("")}</div>`;
+}
+
+function renderAiPipeline(steps, activeIndex) {
+  const el = $("#ai-pipeline");
+  el.hidden = false;
+  el.innerHTML = steps
+    .map((label, i) => {
+      const state = i < activeIndex ? "done" : i === activeIndex ? "active" : "";
+      return `${i > 0 ? '<span class="ai-pipeline-arrow">→</span>' : ""}<div class="ai-pipeline-stage ${state}"><span class="ai-pipeline-num">${
+        i + 1
+      }</span><span class="ai-pipeline-name">${escapeHtml(label)}</span></div>`;
+    })
+    .join("");
+}
+
+function setAiError(msg) {
+  const el = $("#ai-error");
+  if (msg) {
+    el.textContent = msg;
+    el.hidden = false;
+  } else {
+    el.hidden = true;
+  }
+}
+
+$("#ai-goal-picker").addEventListener("click", (e) => {
+  const btn = e.target.closest(".ai-goal-btn");
+  if (!btn) return;
+  currentAiGoal = btn.dataset.goal;
+  $$(".ai-goal-btn").forEach((b) => b.classList.toggle("active", b === btn));
+  const cfg = AI_GOALS[currentAiGoal];
+  $("#ai-input-label").textContent = cfg.label;
+  $("#ai-input").placeholder = cfg.placeholder;
+  $("#ai-input").value = "";
+  $("#ai-pipeline").hidden = true;
+  $("#ai-pipeline").innerHTML = "";
+  $("#ai-result").innerHTML = "";
+  setAiError("");
+});
+
+$("#ai-example-btn").addEventListener("click", () => {
+  $("#ai-input").value = AI_GOALS[currentAiGoal].placeholder;
+});
+
+$("#ai-run-btn").addEventListener("click", async () => {
+  const cfg = AI_GOALS[currentAiGoal];
+  const text = $("#ai-input").value.trim();
+  setAiError("");
+  if (text.length < 20) {
+    setAiError("Describe it with at least 20 characters so Claude has enough context.");
+    return;
+  }
+  const runBtn = $("#ai-run-btn");
+  runBtn.disabled = true;
+  runBtn.textContent = "Running…";
+  $("#ai-result").innerHTML = "";
+  renderAiPipeline(cfg.steps, 0);
+  let stepIndex = 0;
+  const stepTimer = setInterval(() => {
+    stepIndex = Math.min(stepIndex + 1, cfg.steps.length - 1);
+    renderAiPipeline(cfg.steps, stepIndex);
+  }, 1100);
+  try {
+    const result = await cfg.run(text);
+    clearInterval(stepTimer);
+    renderAiPipeline(cfg.steps, cfg.steps.length);
+    renderAiResult(result);
+  } catch (err) {
+    clearInterval(stepTimer);
+    setAiError(err.message || "Something went wrong calling Claude.");
+    $("#ai-pipeline").hidden = true;
+  } finally {
+    runBtn.disabled = false;
+    runBtn.textContent = "Run with Claude";
+  }
+});
+
+/* ============================================================
    MODULE 1 · AI Operations Copilot
    ============================================================ */
 
@@ -570,10 +772,10 @@ const INTEGRATION_SYSTEMS = {
     output: "Structured decisions, extracted fields, or a drafted response for human review.",
   },
   "power-automate": {
-    name: "Power Automate / RPA",
+    name: "RPA — UiPath / Automation Anywhere / Power Automate",
     tag: "lab",
     input: "A triggering event — new file, status change, scheduled run.",
-    action: "Executes a deterministic, rule-based workflow (see the RPA Workflow module).",
+    action: "Executes a deterministic, rule-based workflow (see the RPA Workflow module). The same trigger/validate/act pattern maps to any of the three platforms.",
     output: "An updated system record plus an audit log entry.",
   },
   "rest-api": {

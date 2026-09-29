@@ -29,8 +29,7 @@
   <div class="container">
     <p class="role-line">Digital Transformation &amp; Automation Specialist — Charger Logistics</p>
     <h1>An interactive console for logistics automation.</h1>
-    <p class="lead">Six live modules — click through an AI copilot, document automation, an RPA workflow, an integration map and a KPI dashboard, the way I'd design them for a real logistics operation.</p>
-    <p class="disclaimer-chip"><strong>Note:</strong> Portfolio demonstration using synthetic logistics data. No confidential company data.</p>
+    <p class="lead">Start in the Live AI Console — describe a real logistics workflow and Claude analyzes it live. The other six modules show the automation, integration and monitoring layers around it. <span class="hero-note">Synthetic data; no confidential company data.</span></p>
   </div>
 </section>
 
@@ -39,21 +38,54 @@
   <div class="container">
 
     <div class="console-tabs" id="console-tabs" role="tablist">
-      <button class="console-tab active" data-tab="copilot" type="button"><span class="console-tab-num">01</span><span class="label">Operations Copilot</span></button>
-      <button class="console-tab" data-tab="documents" type="button"><span class="console-tab-num">02</span><span class="label">Document Automation</span></button>
-      <button class="console-tab" data-tab="rpa" type="button"><span class="console-tab-num">03</span><span class="label">RPA Workflow</span></button>
-      <button class="console-tab" data-tab="integration" type="button"><span class="console-tab-num">04</span><span class="label">Integration Map</span></button>
-      <button class="console-tab" data-tab="dashboard" type="button"><span class="console-tab-num">05</span><span class="label">Performance Dashboard</span></button>
-      <button class="console-tab" data-tab="governance" type="button"><span class="console-tab-num">06</span><span class="label">Build vs Buy</span></button>
+      <button class="console-tab active" data-tab="ai-console" type="button"><span class="console-tab-num">01</span><span class="label">Live AI Console</span></button>
+      <button class="console-tab" data-tab="copilot" type="button"><span class="console-tab-num">02</span><span class="label">Operations Copilot</span></button>
+      <button class="console-tab" data-tab="documents" type="button"><span class="console-tab-num">03</span><span class="label">Document Automation</span></button>
+      <button class="console-tab" data-tab="rpa" type="button"><span class="console-tab-num">04</span><span class="label">RPA Workflow</span></button>
+      <button class="console-tab" data-tab="integration" type="button"><span class="console-tab-num">05</span><span class="label">Integration Map</span></button>
+      <button class="console-tab" data-tab="dashboard" type="button"><span class="console-tab-num">06</span><span class="label">Performance Dashboard</span></button>
+      <button class="console-tab" data-tab="governance" type="button"><span class="console-tab-num">07</span><span class="label">Build vs Buy</span></button>
     </div>
 
     <div class="console-body">
 
+      <!-- ===== MODULE 0 · LIVE AI CONSOLE (real Claude API via Netlify Functions) ===== -->
+      <div class="module-panel" data-module="ai-console">
+        <div class="module-header">
+          <h3 class="module-title">Live AI Console <span class="tag-badge tag-good">Live Claude API</span></h3>
+          <p class="module-desc">Pick a goal, describe a real situation, and Claude generates the analysis live through a Netlify Function. Nothing here is pre-written.</p>
+        </div>
+
+        <div class="ai-goal-picker" id="ai-goal-picker">
+          <button class="ai-goal-btn active" data-goal="audit" type="button">Audit a workflow</button>
+          <button class="ai-goal-btn" data-goal="opportunities" type="button">Find automation opportunities</button>
+          <button class="ai-goal-btn" data-goal="bot" type="button">Design a conversational bot</button>
+          <button class="ai-goal-btn" data-goal="integration" type="button">Design an integration</button>
+          <button class="ai-goal-btn" data-goal="document" type="button">Process a freight document</button>
+          <button class="ai-goal-btn" data-goal="dashboard" type="button">Build a KPI dashboard</button>
+          <button class="ai-goal-btn" data-goal="documentation" type="button">Document an automation</button>
+        </div>
+
+        <div class="ai-input-block">
+          <label for="ai-input" class="field-label" id="ai-input-label">Describe the workflow</label>
+          <textarea id="ai-input" rows="2" placeholder="Each morning, dispatch manually checks three systems to see which loads are missing a signed rate confirmation before they can be released."></textarea>
+          <div class="cta-row" style="margin-top:10px;">
+            <button id="ai-run-btn" class="btn btn-primary" type="button">Run with Claude</button>
+            <button id="ai-example-btn" class="btn btn-outline" type="button">Try an example</button>
+          </div>
+          <p id="ai-error" class="error-msg" hidden></p>
+        </div>
+
+        <div class="ai-pipeline" id="ai-pipeline" hidden></div>
+
+        <div class="ai-result" id="ai-result"></div>
+      </div>
+
       <!-- ===== MODULE 1 · AI OPERATIONS COPILOT ===== -->
-      <div class="module-panel" data-module="copilot">
+      <div class="module-panel" data-module="copilot" hidden>
         <div class="module-header">
           <h3 class="module-title">AI Operations Copilot</h3>
-          <p class="module-desc">A conversational assistant over logistics operations data — grounded reasoning, structured answers, explicit guardrails, and a real handoff to a human when the case requires it.</p>
+          <p class="module-desc">A conversational assistant over logistics operations data — grounded reasoning, structured answers, explicit guardrails, and a real handoff to a human when the case requires it. Built on Claude here; the same intent → guardrail → escalation design carries over to Dialogflow, Microsoft Bot Framework or Rasa.</p>
         </div>
 
         <div class="copilot-shell">
@@ -78,7 +110,7 @@
       <div class="module-panel" data-module="documents" hidden>
         <div class="module-header">
           <h3 class="module-title">Document Automation</h3>
-          <p class="module-desc">Simulated intelligent document processing for freight paperwork — extraction, validation, structured output, and exception routing to a human reviewer when confidence is low.</p>
+          <p class="module-desc">Simulated intelligent document processing for freight paperwork — OCR extraction, validation, structured output, and exception routing to a human reviewer when confidence is low. The extraction/validation split below is the same shape used with Textract, Azure Form Recognizer, or a Python script gluing OCR output to the TMS/ERP.</p>
         </div>
 
         <div class="doc-type-picker" id="doc-type-picker">
@@ -102,7 +134,7 @@
         <div class="module-header">
           <h3 class="module-title">RPA / Power Automate Workflow</h3>
           <p class="module-desc">A deterministic, rule-based workflow — the kind that doesn't need an LLM at all. Click a node for its rule, retry logic and audit trail, or run the simulation to see a failure retried live.</p>
-          <p class="module-note">Functional portfolio workflow / hands-on lab — built to demonstrate Power Automate &amp; RPA concepts, not a claim of prior production experience with Power Automate.</p>
+          <p class="module-note">Functional portfolio workflow / hands-on lab — built to demonstrate the trigger → validate → act → notify → log pattern shared by UiPath, Automation Anywhere and Power Automate, not a claim of prior production experience with any specific RPA platform.</p>
         </div>
 
         <div class="rpa-flow" id="rpa-flow">
@@ -232,11 +264,13 @@
     <p class="section-intro">Every module above is an interactive simulation built to show how these pieces fit together in a real operation.</p>
     <div class="cap-grid">
       <span class="cap-tag">Claude / LLM workflows</span>
-      <span class="cap-tag">Conversational AI</span>
-      <span class="cap-tag">RPA / Power Automate</span>
-      <span class="cap-tag">Document processing</span>
-      <span class="cap-tag">REST APIs</span>
+      <span class="cap-tag">Conversational AI (Dialogflow, Bot Framework, Rasa concepts)</span>
+      <span class="cap-tag">RPA (UiPath, Automation Anywhere, Power Automate)</span>
+      <span class="cap-tag">OCR / Document processing</span>
+      <span class="cap-tag">REST &amp; SOAP APIs</span>
       <span class="cap-tag">SQL</span>
+      <span class="cap-tag">Python scripting</span>
+      <span class="cap-tag">Workday &amp; SAP integration concepts</span>
       <span class="cap-tag">Power BI</span>
       <span class="cap-tag">Human-in-the-loop</span>
       <span class="cap-tag">Monitoring and troubleshooting</span>
@@ -252,13 +286,14 @@
     <p class="section-intro" style="margin-bottom:14px;">Available to discuss the Digital Transformation &amp; Automation Specialist role at Charger Logistics.</p>
     <p class="contact-email">sarahicruzsalazar@gmail.com</p>
     <a class="link additional-work" href="https://github.com/apogeoconsara/PortafolioAI" target="_blank" rel="noopener">View additional work →</a>
+    <a class="link additional-work" href="https://siemensaiportafolio.netlify.app" target="_blank" rel="noopener">SAP FI/CO data pipeline &amp; governance checks (live demo) →</a>
   </div>
 </section>
 
 <footer class="footer">
   <div class="container">
     <p>© 2026 Sarahí Cruz Salazar · Built as an interactive portfolio console</p>
-    <p class="disclaimer-footer-note">Portfolio demonstration using synthetic logistics data. No confidential company data. Power Automate/RPA and Workday content are presented as hands-on lab work and integration architecture concepts respectively — not claims of prior production experience with those specific platforms.</p>
+    <p class="disclaimer-footer-note">Portfolio demonstration using synthetic logistics data. No confidential company data. RPA (UiPath/Automation Anywhere/Power Automate), chatbot platforms (Dialogflow/Bot Framework/Rasa) and Workday content are presented as hands-on lab work and integration architecture concepts — not claims of prior production experience with those specific platforms.</p>
   </div>
 </footer>
 
